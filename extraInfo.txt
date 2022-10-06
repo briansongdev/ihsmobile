@@ -1,0 +1,25 @@
+-RallyScheduleEven = 1
+-RallyScheduleOdd = 11
+
+-Minimum Anchor Day = 2,
+-Minimum Day Even = 9,
+-Minimum Day Odd = 10,
+
+-FlexEvenDay = 3 
+-FlexOddDay = 4,
+
+-LateStartWithEven = 5
+-LateStartWithOdd = 6,
+
+-TAOdd = 7,
+-TAEven = 8,
+
+-Break = 0
+
+Make sure to check the website for "special" days, like PSAT testing, Finals Schedule, and 1 through 8 days. These will not accurately reflect in your IHS Mobile schedule.
+
+TabNavigator:
+Bookmark, Calendar, Home (Settings), Location, Chat
+
+Future roadmap:
+Notifications? Support for local accounts?

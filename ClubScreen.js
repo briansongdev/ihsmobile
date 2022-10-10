@@ -71,14 +71,14 @@ export default function ClubScreen() {
   if (!clubs || !favoritedClubs) {
     return (
       <View style={styles.topContainer}>
-        <Text>Loading, please wait...</Text>
+        <ActivityIndicator animating={true} color="green" />
       </View>
     );
   } else {
     return (
       <View style={styles.container}>
         <View style={{ margin: 10 }}>
-          <Card mode="contained" style={{ backgroundColor: "#e5f6df" }}>
+          <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
             <Card.Content>
               <Title>Have a club?</Title>
               <Paragraph>Add your club to the app here.</Paragraph>
@@ -246,6 +246,9 @@ export default function ClubScreen() {
                   </Card>
                 );
               })}
+            <Text style={{ textAlign: "center", margin: 10 }}>
+              ... end of favorited clubs
+            </Text>
             <Text style={{ textAlign: "center" }} variant="titleLarge">
               Other Clubs
             </Text>
@@ -319,6 +322,9 @@ export default function ClubScreen() {
                   );
                 }
               })}
+            <Text style={{ textAlign: "center", margin: 10 }}>
+              ... end of other clubs
+            </Text>
           </View>
         </ScrollView>
       </View>

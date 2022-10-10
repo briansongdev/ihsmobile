@@ -1,22 +1,39 @@
-import {
-  setStatusBarNetworkActivityIndicatorVisible,
-  StatusBar,
-} from "expo-status-bar";
-import { useState, useEffect } from "react";
-import { StyleSheet, View, Image, Alert, ScrollView } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
-import { Button, Text, Card, Title, Paragraph } from "react-native-paper";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import * as SecureStore from "expo-secure-store";
-import axios from "axios";
-import { IMPORTEDB64 } from "./importedURI";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import greetingTime from "greeting-time";
+import { Text } from "react-native-paper";
 
 export default function LocationScreen() {
   return (
-    <View>
-      <Text>hi!</Text>
-    </View>
+    <>
+      <View>
+        <Text style={{ margin: 5, textAlign: "center" }}>
+          Tip: Sign in with Google, since you've already done this once - most
+          likely, you won't need to manually enter your credentials.
+        </Text>
+      </View>
+      <WebView
+        userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+        source={{
+          uri: "https://teachmore.org/irvine/students/studentPortal.php",
+        }}
+      />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#e6fef9",
+  },
+  topContainer: {
+    flex: 1,
+    backgroundColor: "#e6fef9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tinyLogo: {
+    width: 338.7 / 2,
+    height: 142.5 / 2,
+  },
+});

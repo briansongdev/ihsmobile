@@ -152,10 +152,7 @@ function Account({ route, navigation }) {
                         name: fullName,
                         currentGrade: grade,
                         bearer: tempName,
-                        barcode:
-                          "https://barcode.tec-it.com/barcode.ashx?data=" +
-                          userObj +
-                          "&code=Code39FullASCII",
+                        barcode: "https://barcodeapi.org/api/39/" + userObj,
                       }
                     )
                     .then(async (res) => {
@@ -221,7 +218,7 @@ function Landing({ navigation }) {
   const showConfirmDialog = () => {
     return Alert.alert(
       "Set up locally?",
-      "Features like auto-adding classes, grades, global chat, and friends will be disabled. Continue?",
+      "Convenient features like device-to-device data transfer will be lost. Continue?",
       [
         {
           text: "Yes",
@@ -246,11 +243,13 @@ function Landing({ navigation }) {
         }}
       />
       <Text variant="titleMedium">Welcome to Irvine High Mobile!</Text>
-      <Text variant="titleMedium">{"\n"}With IHS mobile: </Text>
+      <Text variant="titleMedium">
+        {"\n"}With IHS mobile:{"\n"}
+      </Text>
       <Text variant="bodyMedium">
-        - Check classes and grades{"\n"}- Plan your schedule{"\n"}- Coordinate
-        mealtimes with friends{"\n"}- Discover IHS clubs{"\n"} ...and so much
-        more!
+        - Check classes and grades{"\n"}- Plan your schedule{"\n"}- Discover IHS
+        clubs{"\n"}- Access important bookmarks{"\n"}- Sign up for flextime
+        easily{"\n\n"}...and so much more!
       </Text>
       <Text variant="titleMedium">{"\n"}Let's get started, Vaqueros.</Text>
       <Button
@@ -271,9 +270,9 @@ function Landing({ navigation }) {
         onPress={() => {
           showConfirmDialog();
         }}
-        disbled={true}
+        disabled={true}
       >
-        Set up a local account
+        Set up a local account (coming soon)
       </Button>
     </View>
   );
@@ -310,8 +309,8 @@ export default function App() {
   }, []);
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading, please wait...</Text>
+      <View style={styles.topContainer}>
+        <ActivityIndicator animating={true} color="green" />
       </View>
     );
   } else {

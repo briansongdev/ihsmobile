@@ -9,9 +9,11 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
+import * as Haptics from "expo-haptics";
 import {
   IconButton,
   Text,
@@ -34,6 +36,7 @@ import CalendarScreen from "./CalendarScreen.js";
 import ChatScreen from "./ChatScreen.js";
 import LocationScreen from "./LocationScreen.js";
 import ClubScreen from "./ClubScreen.js";
+import * as LocalAuthentication from "expo-local-authentication";
 
 function HomeScreen({ navigation }) {
   const [account, setAccount] = useState({});
@@ -59,6 +62,7 @@ function HomeScreen({ navigation }) {
         });
         open.apply(this, arguments);
     };})();`;
+
   useEffect(() => {
     const hi = async () => {
       if (Object.keys(account).length == 0 || calendar.length == 0) {
@@ -120,7 +124,18 @@ function HomeScreen({ navigation }) {
             icon="card-account-details-outline"
             iconColor="teal"
             size={30}
-            onPress={() => setIDvisible(true)}
+            onPress={async () => {
+              if (
+                (
+                  await LocalAuthentication.authenticateAsync({
+                    promptMessage:
+                      "Authentication is required for you to conveniently and privately access sensitive information.",
+                  })
+                ).success == true
+              ) {
+                setIDvisible(true);
+              }
+            }}
           />
         ),
         headerRight: () => (
@@ -128,13 +143,33 @@ function HomeScreen({ navigation }) {
             icon="refresh"
             iconColor="teal"
             size={30}
-            onPress={() => setRefreshVisible(true)}
+            onPress={() =>
+              Alert.alert(
+                "Re-sync with Aeries and refresh your grades?",
+                "You'll be asked to sign-in with Google again.",
+                [
+                  {
+                    text: "No",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Yes",
+                    onPress: async () => {
+                      Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Warning
+                      );
+                      setRefreshVisible(true);
+                    },
+                  },
+                ]
+              )
+            }
           />
         ),
       });
     };
     hi();
-  }, [account || calendar]);
+  }, [account, calendar]);
   if (Object.keys(account).length == 0 || calendar.length == 0) {
     return (
       <View style={styles.topContainer}>
@@ -272,21 +307,37 @@ function HomeScreen({ navigation }) {
         <>
           <Portal>
             <Dialog visible={idVisible} dismissable={false}>
-              <Dialog.Title>My ID Barcode:</Dialog.Title>
-              <Dialog.Content style={{ alignItems: "center" }}>
-                <Paragraph>
-                  To allow physical scanners (e.g. during flextime) to scan your
-                  phone,{" "}
-                  <Text style={{ fontWeight: "bold" }}>
-                    turn your screen brightness to the maximum.
-                  </Text>
-                </Paragraph>
-                <Image
-                  style={{ height: 150, width: 360, margin: 10 }}
-                  source={{
-                    uri: relevantURI,
-                  }}
-                />
+              <Dialog.Title>
+                <Text style={{ fontWeight: "bold" }} variant="displayMedium">
+                  {account.name}
+                </Text>
+              </Dialog.Title>
+              <Dialog.Content>
+                <Text variant="headlineMedium" style={{ marginTop: -20 }}>
+                  Grade {account.currentGrade}
+                </Text>
+
+                <Text>
+                  <Text style={{ fontWeight: "bold" }}>{"\n"}Personal ID:</Text>{" "}
+                  {account.uid} {"\n"}
+                  <Text style={{ fontWeight: "bold" }}>ID Card:</Text>
+                </Text>
+
+                <View style={{ alignItems: "center" }}>
+                  <Image
+                    style={{ height: 150, width: 360, margin: 10 }}
+                    source={{
+                      uri: relevantURI,
+                    }}
+                  />
+                  <Paragraph>
+                    To allow physical scanners (e.g. during flextime) to scan
+                    your phone,{" "}
+                    <Text style={{ fontWeight: "bold" }}>
+                      turn your screen brightness to the maximum.
+                    </Text>
+                  </Paragraph>
+                </View>
               </Dialog.Content>
               <Dialog.Actions>
                 <Button
@@ -2030,11 +2081,12 @@ export default function OnlineHomePage({ navigation }) {
             tabBarShowLabel: false,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons
-                name="bookmark-box-multiple"
+                name="account-group"
                 color={color}
                 size={size}
               />
             ),
+            lazy: false,
           }}
           component={ClubScreen}
         />

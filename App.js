@@ -1,7 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Image, Alert, SafeAreaView } from "react-native";
+import { StyleSheet, View, Image, Alert, Linking } from "react-native";
 import { WebView } from "react-native-webview";
+import * as Updates from "expo-updates";
+import * as SplashScreen from "expo-splash-screen";
 import {
   Button,
   Text,
@@ -65,12 +67,18 @@ function Account({ route, navigation }) {
           }}
         >
           <Text style={{ margin: 10 }}>
-            Welcome. To get started, sign in with your IUSD email (and login
-            with Google). Your data is directly passed through Aeries, and we'll
-            redirect you once signed-in.{" "}
-            <Text style={{ fontWeight: "bold" }}>
-              By logging in, you agree to our TOS and Privacy Policy.
-            </Text>
+            Welcome. To get started, sign in with your IUSD email (login with
+            Google).{" "}
+            <Text
+              onPress={() => {
+                Linking.openURL("https://ihsmobile.webflow.io");
+              }}
+              style={{ fontWeight: "bold", color: "red" }}
+            >
+              Click here to read on what data this app stores and how your data
+              is privately processed.
+            </Text>{" "}
+            By continuing to sign in, you affirm that you agree to the above.
           </Text>
         </View>
         <WebView
@@ -162,6 +170,10 @@ function Account({ route, navigation }) {
                       } else {
                         await SecureStore.setItemAsync("isLocal", "false");
                         await SecureStore.setItemAsync("bearer", tempName);
+                        await SecureStore.setItemAsync(
+                          "notifications",
+                          "false"
+                        );
                       }
                     });
                 }, 1000);
@@ -279,9 +291,12 @@ function Landing({ navigation }) {
 }
 const Stack = createNativeStackNavigator();
 
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const [isSignedIn, setSignedIn] = useState(false);
   const [isLoading, setLoading] = useState(true);
+  const [isDone, setIsDone] = useState(false);
   useEffect(() => {
     // Fetch the token from storage then navigate to our appropriate place
     var loginCheck = setInterval(async () => {
@@ -302,52 +317,71 @@ export default function App() {
           }
         }
         setLoading(false);
+        await SplashScreen.hideAsync();
       } catch (e) {
         alert(e);
       }
     }, 1000);
   }, []);
-  if (isLoading) {
-    return (
-      <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="green" />
-      </View>
-    );
+  useEffect(() => {
+    if (Updates.checkForUpdateAsync().isAvailable) {
+      Alert.alert(
+        "Update",
+        "There is a new update. Please go to the App Store to install.",
+        [{ text: "Ok", onPress: () => setIsDone(true) }],
+        { cancelable: false }
+      );
+    }
+  }, []);
+  if (!isDone) {
+    if (isLoading) {
+      return (
+        <View style={styles.topContainer}>
+          <ActivityIndicator animating={true} color="green" />
+        </View>
+      );
+    } else {
+      return (
+        <>
+          <PaperProvider theme={theme}>
+            <NavigationContainer>
+              <Stack.Navigator>
+                {!isSignedIn ? (
+                  <>
+                    <Stack.Screen
+                      name="Home"
+                      options={{
+                        headerShown: false,
+                      }}
+                      component={Landing}
+                    />
+                    <Stack.Screen
+                      name="Account"
+                      options={{
+                        animation: "fade_from_bottom",
+                      }}
+                      component={Account}
+                    />
+                  </>
+                ) : (
+                  <Stack.Screen
+                    name="HomePage"
+                    options={{ headerShown: false }}
+                    component={OnlineHomePage}
+                  />
+                )}
+              </Stack.Navigator>
+            </NavigationContainer>
+          </PaperProvider>
+          <StatusBar style="auto" />
+        </>
+      );
+    }
   } else {
     return (
-      <>
-        <PaperProvider theme={theme}>
-          <NavigationContainer>
-            <Stack.Navigator>
-              {!isSignedIn ? (
-                <>
-                  <Stack.Screen
-                    name="Home"
-                    options={{
-                      headerShown: false,
-                    }}
-                    component={Landing}
-                  />
-                  <Stack.Screen
-                    name="Account"
-                    options={{
-                      animation: "fade_from_bottom",
-                    }}
-                    component={Account}
-                  />
-                </>
-              ) : (
-                <Stack.Screen
-                  name="HomePage"
-                  options={{ headerShown: false }}
-                  component={OnlineHomePage}
-                />
-              )}
-            </Stack.Navigator>
-          </NavigationContainer>
-        </PaperProvider>
-        <StatusBar style="auto" />
-      </>
+      <View style={styles.container}>
+        <Text>There is an update available. Please check the App Store.</Text>
+      </View>
     );
   }
 }

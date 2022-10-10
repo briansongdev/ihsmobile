@@ -2,7 +2,8 @@ import {
   setStatusBarNetworkActivityIndicatorVisible,
   StatusBar,
 } from "expo-status-bar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import * as Notifications from "expo-notifications";
 import {
   StyleSheet,
   View,
@@ -22,15 +23,79 @@ import {
   TextInput,
 } from "react-native-paper";
 import * as SecureStore from "expo-secure-store";
+import * as Haptics from "expo-haptics";
 import axios from "axios";
 import { Calendar } from "react-native-calendars";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import ConfettiCannon from "react-native-confetti-cannon";
+import * as Device from "expo-device";
 
 const workout = { key: "workout", color: "green" };
 const vacation = { key: "vacation", color: "red", selectedDotColor: "blue" };
 
-export default function CalendarScreen() {
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+async function sendPushNotification(expoPushToken) {
+  const message = {
+    to: expoPushToken,
+    sound: "default",
+    title: "Original Title",
+    body: "And here is the body!",
+    data: { someData: "goes here" },
+  };
+
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Accept-encoding": "gzip, deflate",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(message),
+  });
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  if (Platform.OS === "android") {
+    Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  return token;
+}
+export default function CalendarScreen({ navigation }) {
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
   const [schedule, setSchedule] = useState();
   const [currSelectedDate, setCurrSelectedDate] = useState(new Date());
   const [currYear, setCurrYear] = useState();
@@ -39,6 +104,9 @@ export default function CalendarScreen() {
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [shoot, setShoot] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [bell, setBell] = useState(false);
+  const [notisOn, setNotis] = useState(false);
   const [datete, setDatete] = useState(
     new Date(
       new Date(currSelectedDate).setHours(
@@ -50,6 +118,26 @@ export default function CalendarScreen() {
     eventTitle: "",
     description: "",
   });
+  useEffect(() => {
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
   useEffect(() => {
     const hi = async () => {
       if (!(await SecureStore.getItemAsync("selectedDate"))) {
@@ -116,9 +204,56 @@ export default function CalendarScreen() {
         }
         setMarkedDates(newBigObject);
       }
+      if ((await SecureStore.getItemAsync("notifications")) == "true") {
+        setNotis(true);
+        navigation.setOptions({
+          headerLeft: () => (
+            <IconButton
+              icon="information-outline"
+              iconColor="teal"
+              size={30}
+              onPress={() => {
+                setInfoVisible(true);
+              }}
+            />
+          ),
+          headerRight: () => (
+            <IconButton
+              icon="bell"
+              iconColor="teal"
+              size={30}
+              onPress={() => setBell(true)}
+            />
+          ),
+        });
+      } else {
+        setNotis(false);
+        navigation.setOptions({
+          headerLeft: () => (
+            <IconButton
+              icon="information-outline"
+              iconColor="teal"
+              size={30}
+              onPress={() => {
+                setInfoVisible(true);
+              }}
+            />
+          ),
+          headerRight: () => (
+            <IconButton
+              icon="bell-off"
+              iconColor="teal"
+              size={30}
+              onPress={() => {
+                setBell(true);
+              }}
+            />
+          ),
+        });
+      }
     };
     hi();
-  }, [currSelectedDate]);
+  }, [currSelectedDate, bell, visible]);
   if (!schedule) {
     return (
       <View style={styles.topContainer}>
@@ -128,6 +263,87 @@ export default function CalendarScreen() {
   } else {
     return (
       <>
+        <Portal>
+          <Dialog visible={bell} dismissable={false}>
+            <Dialog.Title>Notifications</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>
+                First-time users must grant access to allow notifications. You
+                can only receive notifications on one device at a time under the
+                same account.{"\n\n"}
+                <Text style={{ fontWeight: "bold" }}>
+                  Notifications are currently {notisOn ? "ON." : "OFF."}
+                </Text>
+              </Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button
+                textColor="red"
+                onPress={async () => {
+                  setLoading(true);
+                  await axios.post(
+                    "https://ihsbackend.vercel.app/api/accounts/addNotification",
+                    {
+                      bearer: await SecureStore.getItemAsync("bearer"),
+                      deviceUID: "",
+                    }
+                  );
+                  await SecureStore.setItemAsync("notifications", "false");
+                  setLoading(false);
+                  setBell(false);
+                }}
+              >
+                Turn off notifications
+              </Button>
+              <Button
+                textColor="blue"
+                onPress={async () => {
+                  registerForPushNotificationsAsync().then((token) =>
+                    setExpoPushToken(token)
+                  );
+                  await axios
+                    .post(
+                      "https://ihsbackend.vercel.app/api/accounts/addNotification",
+                      {
+                        bearer: await SecureStore.getItemAsync("bearer"),
+                        deviceUID: await registerForPushNotificationsAsync(),
+                      }
+                    )
+                    .then(async (res) => {
+                      if (!res.data.success) {
+                        alert(
+                          "Your request to enable notifications was not received. Please try again."
+                        );
+                      } else {
+                        await SecureStore.setItemAsync("notifications", "true");
+                        setBell(false);
+                      }
+                    });
+                }}
+              >
+                Allow notifications
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog visible={infoVisible} dismissable={false}>
+            <Dialog.Title>Calendar</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>
+                A seamless place to add and manage your schedule.{"\n\n"}
+                Long-press a date to add an event on that day. Click the "check"
+                to mark as done. You can reactivate or delete "finished" events.
+                {"\n\n"}You can turn on event notifications with the bell.
+              </Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button textColor="blue" onPress={() => setInfoVisible(false)}>
+                Done
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
         <Portal>
           <Dialog visible={visible} dismissable={false}>
             <KeyboardAvoidingView behavior="padding">
@@ -184,6 +400,7 @@ export default function CalendarScreen() {
                   </Button>
                   <Button
                     onPress={async () => {
+                      setLoading(true);
                       let { eventTitle, description } = eventDraft;
                       await axios
                         .post(
@@ -197,6 +414,9 @@ export default function CalendarScreen() {
                         )
                         .then((e) => {
                           if (e.data.success) {
+                            Haptics.notificationAsync(
+                              Haptics.NotificationFeedbackType.Success
+                            );
                             setShoot(false);
                             setShoot(true);
                             setSchedule(
@@ -234,6 +454,7 @@ export default function CalendarScreen() {
                           } else {
                             alert("Error. Check your internet connection.");
                           }
+                          setLoading(false);
                         });
                     }}
                     disabled={eventDraft.eventTitle == "" || datete == ""}
@@ -276,6 +497,7 @@ export default function CalendarScreen() {
             }}
             onDayLongPress={(day) => {
               // add event on this day
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
               if (
                 Date.parse(new Date()) - Date.parse(day.dateString) <
                 86400000
@@ -298,7 +520,7 @@ export default function CalendarScreen() {
             enableSwipeMonths={true}
           />
           <View style={{ alignItems: "center" }}>
-            <Text variant="headlineLarge">
+            <Text variant="headlineLarge" style={{ marginBottom: 10 }}>
               {new Date(
                 new Date(currSelectedDate).setHours(
                   new Date(currSelectedDate).getHours() + 7
@@ -557,6 +779,11 @@ export default function CalendarScreen() {
                                       }
                                       setMarkedDates(newBigObject);
                                       setLoading(false);
+                                      Haptics.notificationAsync(
+                                        Haptics.NotificationFeedbackType.Success
+                                      );
+                                      setShoot(false);
+                                      setShoot(true);
                                     } else {
                                       alert(
                                         "Error. Please check your internet connection and restart the app."
@@ -587,18 +814,11 @@ export default function CalendarScreen() {
                   }
                 }
               })}
-              <Text variant="labelLarge">...end of events</Text>
-              <Text
-                style={{
-                  textAlign: "center",
-                  marginLeft: 50,
-                  marginRight: 50,
-                  marginTop: 10,
-                  textDecorationLine: "underline",
-                }}
-              >
-                Long-press a date to add an event on that day. Click the "check"
-                to finish an event. Click it again to reactivate.
+              <Text variant="labelLarge">No more events on this day!</Text>
+              <Text style={{ fontWeight: "bold" }}>
+                {!notisOn
+                  ? "For a better experience, turn on notifications."
+                  : ""}
               </Text>
             </View>
           </ScrollView>

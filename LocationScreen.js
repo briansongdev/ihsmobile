@@ -5,12 +5,6 @@ import { Text } from "react-native-paper";
 export default function LocationScreen() {
   return (
     <>
-      <View>
-        <Text style={{ margin: 5, textAlign: "center" }}>
-          Tip: Sign in with Google, since you've already done this once - most
-          likely, you won't need to manually enter your credentials.
-        </Text>
-      </View>
       <WebView
         userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
         source={{

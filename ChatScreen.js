@@ -5,32 +5,32 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Dimensions,
+  Alert,
+  Linking,
 } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
+import * as Haptics from "expo-haptics";
 import {
   Button,
   Text,
   Card,
-  Title,
   Paragraph,
-  Searchbar,
   Dialog,
   Portal,
   TextInput,
-  TouchableWithoutFeedback,
-  Keyboard,
   IconButton,
-  Divider,
+  Avatar,
+  ActivityIndicator,
 } from "react-native-paper";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import Hyperlink from "react-native-hyperlink";
 
 export default function ClubScreen({ navigation }) {
   const [bmarks, setBmarks] = useState([]);
   const [visible, setVisible] = useState(false);
   const [shoot, setShoot] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
   const [eventDraft, setEventDraft] = useState({
     eventTitle: "",
     url: "",
@@ -69,7 +69,7 @@ export default function ClubScreen({ navigation }) {
             icon="information-outline"
             iconColor="teal"
             size={30}
-            onPress={() => {}}
+            onPress={() => setInfoVisible(true)}
           />
         ),
         headerRight: () => (
@@ -93,6 +93,38 @@ export default function ClubScreen({ navigation }) {
   } else {
     return (
       <>
+        <Portal>
+          <Dialog visible={infoVisible} dismissable={false}>
+            <Dialog.Title>Bookmarks</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>
+                Bookmarks are a convenient way to keep your most relevant
+                websites just a tap away.{"\n\n"}You can add bookmarks by
+                clicking the top left button.{"\n"}You can delete bookmarks by
+                long-pressing a bookmark card.
+              </Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button textColor="blue" onPress={() => setInfoVisible(false)}>
+                Done
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog visible={loading} dismissable={false}>
+            <Dialog.Content>
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator animating={true} color="blue" />
+              </View>
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
         <Portal>
           <Dialog visible={visible} dismissable={false}>
             <KeyboardAvoidingView behavior="padding">
@@ -144,6 +176,9 @@ export default function ClubScreen({ navigation }) {
                         )
                         .then((e) => {
                           if (e.data.success) {
+                            Haptics.notificationAsync(
+                              Haptics.NotificationFeedbackType.Success
+                            );
                             setShoot(false);
                             setShoot(true);
                             setBmarks(e.data.bookmarks);
@@ -168,42 +203,92 @@ export default function ClubScreen({ navigation }) {
           </Dialog>
         </Portal>
         <View style={styles.container}>
-          <ScrollView>
+          <ScrollView style={{ marginBottom: 50 }}>
             <View style={{ marginBottom: 10 }}>
               {bmarks.map((d) => {
                 return (
-                  <Card
-                    style={{
-                      borderRadius: 15,
-                      marginLeft: 35,
-                      marginRight: 35,
-                      marginTop: 20,
-                    }}
-                  >
-                    <Card.Title
-                      titleStyle={{ fontWeight: "bold", color: "#cbb458" }}
-                      title={d.title}
-                      right={(props) => (
-                        <IconButton {...props} icon="delete-outline" />
-                      )}
-                    ></Card.Title>
-                    <Card.Content>
-                      <Paragraph style={{ marginTop: -20, color: "#23395d" }}>
-                        <Hyperlink
-                          linkStyle={{ color: "#CBC3E3" }}
-                          linkDefault={true}
-                        >
-                          <Text>{d.url}</Text>
-                        </Hyperlink>
-                        {"\n"}
-                        Added on{" "}
-                        {new Date(d.addedDate).toLocaleDateString("en-us", {
-                          day: "numeric",
-                          month: "2-digit",
-                        })}
-                      </Paragraph>
-                    </Card.Content>
-                  </Card>
+                  <>
+                    <Card
+                      onPress={() => {
+                        Linking.openURL(d.url);
+                      }}
+                      onLongPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                        return Alert.alert(
+                          "Are you sure you'd like to delete this bookmark?",
+                          "You can add it back later.",
+                          [
+                            {
+                              text: "No",
+                              style: "cancel",
+                            },
+                            {
+                              text: "Yes",
+                              onPress: async () => {
+                                setLoading(true);
+                                await axios
+                                  .post(
+                                    "https://ihsbackend.vercel.app/api/accounts/bookmarks/deleteBookmark",
+                                    {
+                                      bearer: await SecureStore.getItemAsync(
+                                        "bearer"
+                                      ),
+                                      title: d.title,
+                                      url: d.url,
+                                    }
+                                  )
+                                  .then((res) => {
+                                    if (res.data.success) {
+                                      setBmarks(res.data.bookmarks);
+                                      setLoading(false);
+                                    }
+                                  });
+                              },
+                              style: "destructive",
+                            },
+                          ]
+                        );
+                      }}
+                      style={{
+                        borderRadius: 15,
+                        marginLeft: 35,
+                        marginRight: 35,
+                        marginTop: 15,
+                        backgroundColor: "#e9e9e9",
+                      }}
+                      mode="contained"
+                    >
+                      <Card.Title
+                        titleNumberOfLines={1}
+                        titleStyle={{ fontWeight: "bold" }}
+                        title={d.url}
+                        left={() => (
+                          <Avatar.Image
+                            size={36}
+                            style={{ backgroundColor: "white" }}
+                            source={{ uri: d.url + "/favicon.ico" }}
+                          />
+                        )}
+                      ></Card.Title>
+                      <Card.Content>
+                        <Text style={{ color: "#23395d", margin: 10 }}>
+                          <Text style={{ fontWeight: "bold", fontSize: 20 }}>
+                            {d.title}
+                          </Text>
+                          {"\n"}
+                          <Text style={{ fontWeight: "300" }}>
+                            Added on{" "}
+                            {new Date(d.addedDate).toLocaleDateString("en-us", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </Text>
+                        </Text>
+                      </Card.Content>
+                    </Card>
+                  </>
                 );
               })}
             </View>
@@ -226,6 +311,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#e6fef9",
+  },
+  previewContainer: {
+    backgroundColor: "#e1e1e1",
+    borderRadius: 15,
+    overflow: "hidden",
+    maxWidth: 350,
+    marginTop: 20,
+  },
+  previewImage: {
+    width: 350,
+    height: 200,
+    backgroundColor: "#d5d5d5",
+  },
+  previewTitle: {
+    fontWeight: "700",
+    padding: 10,
+    paddingTop: 10,
+    fontSize: 15,
+  },
+  previewDescription: {
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 20,
+  },
+  previewUrl: {
+    paddingHorizontal: 10,
+    paddingTop: 5,
+    paddingBottom: 10,
+    paddingRight: 40,
+    color: "#777",
+    fontWeight: "300",
   },
   topContainer: {
     flex: 1,

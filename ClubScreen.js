@@ -25,10 +25,11 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import Hyperlink from "react-native-hyperlink";
 
-export default function ClubScreen() {
+export default function ClubScreen({ navigation }) {
   const [clubs, setClubs] = useState([]);
   const [favoritedClubs, setFavoritedClubs] = useState([]);
   const [visible, setVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
   const [clubObject, setClubObj] = useState({
     clubName: "",
     description: "",
@@ -65,6 +66,16 @@ export default function ClubScreen() {
             "We have run into an error. Please force-quit the app and restart."
           );
         });
+      navigation.setOptions({
+        headerLeft: () => (
+          <IconButton
+            icon="information-outline"
+            iconColor="teal"
+            size={30}
+            onPress={() => setInfoVisible(true)}
+          />
+        ),
+      });
     }
     fetchClubs();
   }, []);
@@ -95,6 +106,24 @@ export default function ClubScreen() {
               </Button>
             </Card.Actions>
           </Card>
+          <Portal>
+            <Dialog visible={infoVisible} dismissable={false}>
+              <Dialog.Title>Clubs</Dialog.Title>
+              <Dialog.Content>
+                <Paragraph>
+                  Check out Irvine High School clubs!{"\n\n"}If you would like
+                  to display your club on this app, click "Submit your club." To
+                  moderate spam, your request will be manually approved (and
+                  take a couple days to show up). Thank you!
+                </Paragraph>
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button textColor="blue" onPress={() => setInfoVisible(false)}>
+                  Done
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
           <Portal>
             <Dialog visible={visible} dismissable={false}>
               <KeyboardAvoidingView behavior="padding">
@@ -206,7 +235,10 @@ export default function ClubScreen() {
         </View>
         <ScrollView>
           <View style={{ marginBottom: 10 }}>
-            <Text style={{ textAlign: "center" }} variant="titleLarge">
+            <Text
+              style={{ textAlign: "center", fontWeight: "bold" }}
+              variant="titleLarge"
+            >
               Favorited Clubs
             </Text>
             {favoritedClubs
@@ -249,7 +281,10 @@ export default function ClubScreen() {
             <Text style={{ textAlign: "center", margin: 10 }}>
               ... end of favorited clubs
             </Text>
-            <Text style={{ textAlign: "center" }} variant="titleLarge">
+            <Text
+              style={{ textAlign: "center", fontWeight: "bold" }}
+              variant="titleLarge"
+            >
               Other Clubs
             </Text>
             {clubs

@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#e5f6df"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -18,7 +18,10 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use of Face ID authentication is to allow user to conveniently and privately access sensitive information."
+      }
     },
     "android": {
       "adaptiveIcon": {

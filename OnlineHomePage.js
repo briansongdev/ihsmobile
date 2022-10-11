@@ -435,7 +435,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -468,10 +468,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     9:55 AM - 10:05 AM
                                   </Title>
                                 </Title>
@@ -493,7 +498,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -522,10 +527,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -546,7 +556,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -596,7 +606,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -625,10 +635,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     9:55 AM - 10:05 AM
                                   </Title>
                                 </Title>
@@ -650,7 +665,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -679,10 +694,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -703,7 +723,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -755,7 +775,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -784,10 +804,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -808,7 +833,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -858,7 +883,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -887,10 +912,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Flex Time -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:00 AM - 10:25 AM
                                   </Title>
                                 </Title>
@@ -907,10 +937,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -932,7 +967,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -961,10 +996,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -985,7 +1025,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1035,7 +1075,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1064,10 +1104,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Flex Time -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:00 AM - 10:25 AM
                                   </Title>
                                 </Title>
@@ -1084,10 +1129,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -1109,7 +1159,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1138,10 +1188,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -1162,7 +1217,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1212,7 +1267,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1240,17 +1295,16 @@ function HomeScreen({ navigation }) {
                               key={index + 810}
                             >
                               <Card.Content>
-                                <Title style={{ fontSize: 12 }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 16 }}
+                                >
                                   Advisement -{" "}
                                   {
                                     account.classes.find(
                                       (de) => de.PeriodTitle == "TA"
                                     ).RoomNumber
-                                  }
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    10:00 AM - 10:25 AM
-                                  </Title>
+                                  }{" "}
+                                  - 10:00 AM - 10:25 AM
                                 </Title>
                               </Card.Content>
                             </Card>
@@ -1265,10 +1319,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -1290,7 +1349,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1319,10 +1378,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -1343,7 +1407,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1393,7 +1457,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1421,17 +1485,16 @@ function HomeScreen({ navigation }) {
                               key={index + 990}
                             >
                               <Card.Content>
-                                <Title style={{ fontSize: 12 }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 16 }}
+                                >
                                   Advisement -{" "}
                                   {
                                     account.classes.find(
                                       (de) => de.PeriodTitle == "TA"
                                     ).RoomNumber
-                                  }
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    10:00 AM - 10:25 AM
-                                  </Title>
+                                  }{" "}
+                                  - 10:00 AM - 10:25 AM
                                 </Title>
                               </Card.Content>
                             </Card>
@@ -1446,10 +1509,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -1471,7 +1539,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1500,10 +1568,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -1524,7 +1597,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1574,7 +1647,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1603,10 +1676,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -1628,7 +1706,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1657,10 +1735,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -1681,7 +1764,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1731,7 +1814,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1760,10 +1843,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:25 AM - 10:35 AM
                                   </Title>
                                 </Title>
@@ -1785,7 +1873,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1814,10 +1902,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Lunch -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     12:05 PM - 12:40 PM
                                   </Title>
                                 </Title>
@@ -1838,7 +1931,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1892,7 +1985,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -1921,10 +2014,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:35 AM - 10:45 AM
                                   </Title>
                                 </Title>
@@ -1945,7 +2043,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>
@@ -1999,7 +2097,7 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title style={{ fontWeight: "bold" }}>
-                                  {d.CourseName} - Room {d.RoomNumber} - P
+                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
                                   <Title style={{ fontWeight: "normal" }}>
@@ -2028,10 +2126,15 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ textAlign: "center", fontSize: 12 }}
+                                  style={{ textAlign: "center", fontSize: 16 }}
                                 >
                                   Break -{" "}
-                                  <Title style={{ fontWeight: "normal" }}>
+                                  <Title
+                                    style={{
+                                      fontWeight: "normal",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     10:35 AM - 10:45 AM
                                   </Title>
                                 </Title>
@@ -2052,7 +2155,7 @@ function HomeScreen({ navigation }) {
                           >
                             <Card.Content>
                               <Title style={{ fontWeight: "bold" }}>
-                                {d.CourseName} - Room {d.RoomNumber} - P
+                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
                                 <Title style={{ fontWeight: "normal" }}>

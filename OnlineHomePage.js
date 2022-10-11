@@ -467,7 +467,9 @@ function HomeScreen({ navigation }) {
                               }
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     9:55 AM - 10:05 AM
@@ -519,7 +521,9 @@ function HomeScreen({ navigation }) {
                               key={index + 120}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -620,7 +624,9 @@ function HomeScreen({ navigation }) {
                               key={index + 210}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     9:55 AM - 10:05 AM
@@ -672,7 +678,9 @@ function HomeScreen({ navigation }) {
                               key={index + 270}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -775,7 +783,9 @@ function HomeScreen({ navigation }) {
                               key={index + 360}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -876,7 +886,9 @@ function HomeScreen({ navigation }) {
                               key={index + 450}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Flex Time -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:00 AM - 10:25 AM
@@ -894,7 +906,9 @@ function HomeScreen({ navigation }) {
                               key={index + 480}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -946,7 +960,9 @@ function HomeScreen({ navigation }) {
                               key={index + 540}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1047,7 +1063,9 @@ function HomeScreen({ navigation }) {
                               key={index + 630}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Flex Time -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:00 AM - 10:25 AM
@@ -1065,7 +1083,9 @@ function HomeScreen({ navigation }) {
                               key={index + 660}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -1117,7 +1137,9 @@ function HomeScreen({ navigation }) {
                               key={index + 720}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1218,7 +1240,7 @@ function HomeScreen({ navigation }) {
                               key={index + 810}
                             >
                               <Card.Content>
-                                <Title>
+                                <Title style={{ fontSize: 12 }}>
                                   Advisement -{" "}
                                   {
                                     account.classes.find(
@@ -1242,7 +1264,9 @@ function HomeScreen({ navigation }) {
                               key={index + 840}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -1294,7 +1318,9 @@ function HomeScreen({ navigation }) {
                               key={index + 900}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1395,7 +1421,7 @@ function HomeScreen({ navigation }) {
                               key={index + 990}
                             >
                               <Card.Content>
-                                <Title>
+                                <Title style={{ fontSize: 12 }}>
                                   Advisement -{" "}
                                   {
                                     account.classes.find(
@@ -1419,7 +1445,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1020}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -1471,7 +1499,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1080}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1572,7 +1602,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1170}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -1624,7 +1656,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1230}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1725,7 +1759,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1320}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:25 AM - 10:35 AM
@@ -1777,7 +1813,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1380}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Lunch -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     12:05 PM - 12:40 PM
@@ -1882,7 +1920,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1470}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:35 AM - 10:45 AM
@@ -1987,7 +2027,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1560}
                             >
                               <Card.Content>
-                                <Title style={{ textAlign: "center" }}>
+                                <Title
+                                  style={{ textAlign: "center", fontSize: 12 }}
+                                >
                                   Break -{" "}
                                   <Title style={{ fontWeight: "normal" }}>
                                     10:35 AM - 10:45 AM

@@ -23,6 +23,7 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { Buffer } from "buffer";
 import OnlineHomePage from "./OnlineHomePage.js";
+import { LogBox } from "react-native";
 
 function Account({ route, navigation }) {
   const { isLocal } = route.params;
@@ -49,11 +50,19 @@ function Account({ route, navigation }) {
     return (
       <>
         <Portal>
-          <Dialog visible={visible} dismissable={false}>
+          <Dialog visible={setVisible} dismissable={false}>
             <Dialog.Title>Loading...</Dialog.Title>
-            <Dialog.Content>
-              <Paragraph>Customizing the perfect experience for you!</Paragraph>
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <Dialog.Content style={{ height: 300 }}>
+              <Paragraph>
+                Please wait. We're customizing the perfect experience for you!
+              </Paragraph>
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 100,
+                }}
+              >
                 <ActivityIndicator animating={true} color="green" />
               </View>
             </Dialog.Content>
@@ -298,6 +307,8 @@ export default function App() {
   const [isLoading, setLoading] = useState(true);
   const [isDone, setIsDone] = useState(false);
   useEffect(() => {
+    LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
+    LogBox.ignoreAllLogs(); //Ignore all log notifications
     // Fetch the token from storage then navigate to our appropriate place
     var loginCheck = setInterval(async () => {
       let userToken;
@@ -317,7 +328,7 @@ export default function App() {
           }
         }
         setLoading(false);
-        await SplashScreen.hideAsync();
+        SplashScreen.hideAsync();
       } catch (e) {
         alert(e);
       }

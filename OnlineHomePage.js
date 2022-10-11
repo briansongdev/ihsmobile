@@ -84,6 +84,9 @@ function HomeScreen({ navigation }) {
               setAccount(newRes);
               setURI(res.data.account.barcode);
             } else {
+              await SecureStore.deleteItemAsync("isLocal");
+              await SecureStore.deleteItemAsync("bearer");
+              await SecureStore.deleteItemAsync("classes");
               console.log(res.data.message);
             }
           })

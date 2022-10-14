@@ -4,6 +4,7 @@
 Have the school in the palm of your hands with IHS Mobile. Enjoy features like Club Search, Calendar, Schedule, Flextime, and Bookmarks.
 
 ## To-do list (v2):
+- Confirm email is IUSD before signing up
 - Change Dialogs to Modals (under React Navigation)
 - Toggle showing of grades (ON/OFF)
 - Display X items at a time

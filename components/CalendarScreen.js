@@ -1,7 +1,3 @@
-import {
-  setStatusBarNetworkActivityIndicatorVisible,
-  StatusBar,
-} from "expo-status-bar";
 import { useState, useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import {
@@ -36,29 +32,10 @@ const vacation = { key: "vacation", color: "red", selectedDotColor: "blue" };
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
   }),
 });
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: "default",
-    title: "Original Title",
-    body: "And here is the body!",
-    data: { someData: "goes here" },
-  };
-
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Accept-encoding": "gzip, deflate",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(message),
-  });
-}
 
 async function registerForPushNotificationsAsync() {
   let token;
@@ -363,6 +340,9 @@ export default function CalendarScreen({ navigation }) {
                 <Dialog.Content>
                   <Paragraph>Event name</Paragraph>
                   <TextInput
+                    autoCapitalize="none"
+                    autoComplete="none"
+                    autoCorrect="none"
                     placeholder="Name your event."
                     onChangeText={(e) => {
                       setEventDraft((eventDraft) => ({
@@ -374,6 +354,9 @@ export default function CalendarScreen({ navigation }) {
                   ></TextInput>
                   <Paragraph>Short description.</Paragraph>
                   <TextInput
+                    autoCapitalize="none"
+                    autoComplete="none"
+                    autoCorrect="none"
                     placeholder="To give yourself more detail (optional)."
                     multiline
                     style={{ margin: 10 }}

@@ -89,153 +89,44 @@ export default function ClubScreen({ navigation }) {
   } else {
     return (
       <View style={styles.container}>
-        <View style={{ margin: 10 }}>
-          <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
-            <Card.Content>
-              <Title>Have a club?</Title>
-              <Paragraph>Add your club to the app here.</Paragraph>
-            </Card.Content>
-            <Card.Actions>
-              <Button
-                mode="contained"
-                buttonColor="#00b7eb"
-                onPress={() => {
-                  setVisible(true);
-                }}
-              >
-                Submit your club
+        <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
+          <Card.Content>
+            <Title>Board member of an existing club?</Title>
+            <Paragraph>Add your club to the app here.</Paragraph>
+          </Card.Content>
+          <Card.Actions>
+            <Button
+              mode="contained"
+              buttonColor="#00b7eb"
+              onPress={() => {
+                // setVisible(true);
+                navigation.navigate("Add your club");
+              }}
+            >
+              Submit your club
+            </Button>
+          </Card.Actions>
+        </Card>
+        <Portal>
+          <Dialog visible={infoVisible} dismissable={false}>
+            <Dialog.Title>Clubs</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>
+                Check out Irvine High School clubs!{"\n\n"}If you would like to
+                display your club on this app, click "Submit your club." To
+                moderate spam, your request will be manually approved (and take
+                a couple days to show up). Thank you!
+              </Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button textColor="blue" onPress={() => setInfoVisible(false)}>
+                Done
               </Button>
-            </Card.Actions>
-          </Card>
-          <Portal>
-            <Dialog visible={infoVisible} dismissable={false}>
-              <Dialog.Title>Clubs</Dialog.Title>
-              <Dialog.Content>
-                <Paragraph>
-                  Check out Irvine High School clubs!{"\n\n"}If you would like
-                  to display your club on this app, click "Submit your club." To
-                  moderate spam, your request will be manually approved (and
-                  take a couple days to show up). Thank you!
-                </Paragraph>
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button textColor="blue" onPress={() => setInfoVisible(false)}>
-                  Done
-                </Button>
-              </Dialog.Actions>
-            </Dialog>
-          </Portal>
-          <Portal>
-            <Dialog visible={visible} dismissable={false}>
-              <KeyboardAvoidingView behavior="padding">
-                <ScrollView keyboardShouldPersistTaps="handled">
-                  <Dialog.Title>Submit your club</Dialog.Title>
-                  <Dialog.Content>
-                    <Paragraph>
-                      If your club is in the online catalog, it will be added
-                      shortly after submission.{"\n\n"}What's your club's name?
-                    </Paragraph>
-                    <TextInput
-                      placeholder="Club Name"
-                      onChangeText={(e) => {
-                        setClubObj((clubObject) => ({
-                          ...clubObject,
-                          clubName: e,
-                        }));
-                      }}
-                      style={{ margin: 10 }}
-                    ></TextInput>
-                    <Paragraph>Short description of your club.</Paragraph>
-                    <TextInput
-                      placeholder="Include your meeting datetime."
-                      multiline
-                      style={{ margin: 10 }}
-                      onChangeText={(e) => {
-                        setClubObj((clubObject) => ({
-                          ...clubObject,
-                          description: e,
-                        }));
-                      }}
-                    ></TextInput>
-                    <Paragraph>
-                      Link to your club's registration form/website.
-                    </Paragraph>
-                    <TextInput
-                      placeholder="Member Registration"
-                      keyboardType="url"
-                      style={{ margin: 10 }}
-                      onChangeText={(e) => {
-                        setClubObj((clubObject) => ({
-                          ...clubObject,
-                          registerLink: e,
-                        }));
-                      }}
-                    ></TextInput>
-                    <Paragraph>Which room does your club meet?</Paragraph>
-                    <TextInput
-                      placeholder="Meeting Room"
-                      multiline
-                      style={{ margin: 10 }}
-                      onChangeText={(e) => {
-                        setClubObj((clubObject) => ({
-                          ...clubObject,
-                          clubMeetingRoom: e,
-                        }));
-                      }}
-                    ></TextInput>
-                  </Dialog.Content>
-                  <Dialog.Actions>
-                    <Button textColor="red" onPress={() => setVisible(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onPress={async () => {
-                        const {
-                          clubName,
-                          clubMeetingRoom,
-                          description,
-                          registerLink,
-                        } = clubObject;
-                        await axios
-                          .post(
-                            "https://ihsbackend.vercel.app/api/accounts/proposeClub",
-                            {
-                              clubName: clubName,
-                              clubMeetingRoom: clubMeetingRoom,
-                              description: description,
-                              registerLink: registerLink,
-                              bearer: await SecureStore.getItemAsync("bearer"),
-                            }
-                          )
-                          .then((res) => {
-                            if (res.data.success) {
-                              alert("Success! Thank you.");
-                              setVisible(false);
-                              setClubObj({});
-                            } else {
-                              alert(res.data.message);
-                              setVisible(false);
-                              setClubObj({});
-                            }
-                          });
-                      }}
-                      disabled={
-                        clubObject.clubName == "" ||
-                        clubObject.clubMeetingRoom == "" ||
-                        clubObject.description == "" ||
-                        clubObject.registerLink == ""
-                      }
-                    >
-                      Submit
-                    </Button>
-                  </Dialog.Actions>
-                </ScrollView>
-              </KeyboardAvoidingView>
-            </Dialog>
-          </Portal>
-        </View>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
         <ScrollView>
-          <View style={{ marginBottom: 10 }}>
+          <View style={{ marginTop: 10, marginBottom: 10 }}>
             <Text
               style={{ textAlign: "center", fontWeight: "bold" }}
               variant="titleLarge"
@@ -259,7 +150,9 @@ export default function ClubScreen({ navigation }) {
                       title={
                         d.clubName + " // Meetings in " + d.clubMeetingRoom
                       }
-                      right={(props) => <IconButton {...props} icon="heart" />}
+                      right={(props) => (
+                        <IconButton {...props} icon="heart" iconColor="red" />
+                      )}
                     ></Card.Title>
                     <Card.Content>
                       <Paragraph style={{ marginTop: -20 }}>

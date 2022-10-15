@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -17,13 +17,13 @@ import {
   Paragraph,
   Dialog,
   Portal,
-  TextInput,
   IconButton,
   Avatar,
   ActivityIndicator,
 } from "react-native-paper";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function ClubScreen({ navigation }) {
   const [bmarks, setBmarks] = useState([]);
@@ -31,11 +31,42 @@ export default function ClubScreen({ navigation }) {
   const [shoot, setShoot] = useState(false);
   const [loading, setLoading] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
-  const [eventDraft, setEventDraft] = useState({
-    eventTitle: "",
-    url: "",
-  });
 
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUser = async () => {
+        await axios
+          .get("https://ihsbackend.vercel.app/api/accounts/account", {
+            headers: {
+              bearer: await SecureStore.getItemAsync("bearer"),
+            },
+          })
+          .then(async (res) => {
+            if (res.data.success) {
+              setBmarks(
+                res.data.account.bookmarks.sort(function (x, y) {
+                  return x.title > y.title;
+                })
+              );
+            } else {
+              console.log(res.data.message);
+            }
+          })
+          .catch(async (err) => {
+            await SecureStore.deleteItemAsync("isLocal");
+            await SecureStore.deleteItemAsync("bearer");
+            await SecureStore.deleteItemAsync("classes");
+            alert(
+              "We have run into an error. Please force-quit the app and restart."
+            );
+          });
+      };
+
+      fetchUser();
+
+      return () => {};
+    }, [])
+  );
   useEffect(() => {
     async function fetchBmarks() {
       await axios
@@ -77,7 +108,7 @@ export default function ClubScreen({ navigation }) {
             icon="plus"
             iconColor="teal"
             size={30}
-            onPress={() => setVisible(true)}
+            onPress={() => navigation.navigate("Add a bookmark")}
           />
         ),
       });
@@ -123,83 +154,6 @@ export default function ClubScreen({ navigation }) {
                 <ActivityIndicator animating={true} color="blue" />
               </View>
             </Dialog.Content>
-          </Dialog>
-        </Portal>
-        <Portal>
-          <Dialog visible={visible} dismissable={false}>
-            <KeyboardAvoidingView behavior="padding">
-              <ScrollView keyboardShouldPersistTaps="handled">
-                <Dialog.Title>Add bookmark</Dialog.Title>
-                <Dialog.Content>
-                  <Paragraph>Name of website</Paragraph>
-                  <TextInput
-                    placeholder="A name you'll remember."
-                    onChangeText={(e) => {
-                      setEventDraft((eventDraft) => ({
-                        ...eventDraft,
-                        eventTitle: e,
-                      }));
-                    }}
-                    style={{ margin: 10 }}
-                  ></TextInput>
-                  <Paragraph>URL of website (with http or https)</Paragraph>
-                  <TextInput
-                    autoCapitalize="none"
-                    autoComplete="none"
-                    autoCorrect="none"
-                    placeholder="https://google.com"
-                    style={{ margin: 10 }}
-                    mode="outlined"
-                    onChangeText={(e) => {
-                      setEventDraft((eventDraft) => ({
-                        ...eventDraft,
-                        url: e,
-                      }));
-                    }}
-                  ></TextInput>
-                </Dialog.Content>
-                <Dialog.Actions>
-                  <Button textColor="red" onPress={() => setVisible(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onPress={async () => {
-                      let { eventTitle, url } = eventDraft;
-                      await axios
-                        .post(
-                          "https://ihsbackend.vercel.app/api/accounts/bookmarks/addBookmark",
-                          {
-                            bearer: await SecureStore.getItemAsync("bearer"),
-                            url: url,
-                            title: eventTitle,
-                          }
-                        )
-                        .then((e) => {
-                          if (e.data.success) {
-                            Haptics.notificationAsync(
-                              Haptics.NotificationFeedbackType.Success
-                            );
-                            setShoot(false);
-                            setShoot(true);
-                            setBmarks(e.data.bookmarks);
-                            setVisible(false);
-                          } else {
-                            alert(
-                              "Unsuccessful. Check your internet connection and try again."
-                            );
-                          }
-                        });
-                    }}
-                    disabled={
-                      eventDraft.eventTitle == "" ||
-                      !/^(ftp|http|https):\/\/[^ "]+$/.test(eventDraft.url)
-                    }
-                  >
-                    Submit
-                  </Button>
-                </Dialog.Actions>
-              </ScrollView>
-            </KeyboardAvoidingView>
           </Dialog>
         </Portal>
         <View style={styles.container}>
@@ -264,14 +218,14 @@ export default function ClubScreen({ navigation }) {
                         title={d.url}
                         left={() => (
                           <Avatar.Image
-                            size={36}
+                            size={30}
                             style={{ backgroundColor: "white" }}
                             source={{ uri: d.url + "/favicon.ico" }}
                           />
                         )}
                       ></Card.Title>
                       <Card.Content>
-                        <Text style={{ color: "#23395d", margin: 10 }}>
+                        <Text style={{ color: "#23395d", margin: 5 }}>
                           <Text style={{ fontWeight: "bold", fontSize: 20 }}>
                             {d.title}
                           </Text>

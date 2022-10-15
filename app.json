@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#e5f6df"
+      "backgroundColor": "#e6fef9"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -28,7 +28,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#e5f6df"
+        "backgroundColor": "#e6fef9"
       },
       "package": "com.briansapps.ihsmobile"
     },

@@ -1,8 +1,4 @@
-import {
-  setStatusBarNetworkActivityIndicatorVisible,
-  StatusBar,
-} from "expo-status-bar";
-import { useState, useEffect, useInsertionEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -24,17 +20,17 @@ import {
   Dialog,
   Button,
   ActivityIndicator,
-  Modal,
+  Switch,
 } from "react-native-paper";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { IMPORTEDB64 } from "./importedURI";
+import { IMPORTEDB64 } from "../importedURI";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import greetingTime from "greeting-time";
 import CalendarScreen from "./CalendarScreen.js";
-import ChatScreen from "./ChatScreen.js";
-import LocationScreen from "./LocationScreen.js";
+import ChatScreen from "./BookmarkScreen.js";
+import LocationScreen from "./FlexTimeScreen.js";
 import ClubScreen from "./ClubScreen.js";
 import * as LocalAuthentication from "expo-local-authentication";
 
@@ -44,11 +40,13 @@ function HomeScreen({ navigation }) {
   const [idVisible, setIDvisible] = useState(false);
   const [refreshVisible, setRefreshVisible] = useState(false);
   const [loadingVisible, setLoadingVisible] = useState(false);
+  const [areGradesShowed, switchGradesShowed] = useState(false);
   const [tempName, setTempName] = useState("");
   const [userObj, setUserObj] = useState("");
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState();
   const [relevantURI, setURI] = useState("");
+  const [firstLoad, setFirstLoad] = useState(true);
   const INJECTED_JAVASCRIPT = `(
     function() {
       window.ReactNativeWebView.postMessage(document.documentElement.innerHTML);
@@ -99,6 +97,12 @@ function HomeScreen({ navigation }) {
             );
           });
         const bearr = await SecureStore.getItemAsync("bearer");
+        if (firstLoad) {
+          if ((await SecureStore.getItemAsync("gradesShowed")) == "true")
+            switchGradesShowed(true);
+          else switchGradesShowed(false);
+          setFirstLoad(false);
+        }
         await axios
           .post("https://ihsbackend.vercel.app/api/accounts/getCalendar", {
             bearer: bearr,
@@ -146,33 +150,37 @@ function HomeScreen({ navigation }) {
             icon="refresh"
             iconColor="teal"
             size={30}
-            onPress={() =>
-              Alert.alert(
-                "Re-sync with Aeries and refresh your grades?",
-                "You'll be asked to sign-in with Google again.",
-                [
-                  {
-                    text: "No",
-                    style: "cancel",
-                  },
-                  {
-                    text: "Yes",
-                    onPress: async () => {
-                      Haptics.notificationAsync(
-                        Haptics.NotificationFeedbackType.Warning
-                      );
-                      setRefreshVisible(true);
+            onPress={() => {
+              if (refreshVisible) {
+                setRefreshVisible(false);
+              } else {
+                Alert.alert(
+                  "Re-sync with Aeries and refresh your grades?",
+                  "You'll be asked to sign-in with Google again.",
+                  [
+                    {
+                      text: "No",
+                      style: "cancel",
                     },
-                  },
-                ]
-              )
-            }
+                    {
+                      text: "Yes",
+                      onPress: async () => {
+                        Haptics.notificationAsync(
+                          Haptics.NotificationFeedbackType.Warning
+                        );
+                        setRefreshVisible(true);
+                      },
+                    },
+                  ]
+                );
+              }
+            }}
           />
         ),
       });
     };
     hi();
-  }, [account, calendar]);
+  }, [account, calendar, areGradesShowed]);
   if (Object.keys(account).length == 0 || calendar.length == 0) {
     return (
       <View style={styles.topContainer}>
@@ -247,57 +255,63 @@ function HomeScreen({ navigation }) {
                   }
                 }
               } else {
-                let result;
-                try {
-                  setLoadingVisible(true);
-                  result = JSON.parse(JSON.parse(event.nativeEvent.data));
-                  let newClassObject = [];
-                  for (let i = 0; i < result.length; i++) {
-                    newClassObject.push({
-                      RoomNumber: result[i].RoomNumber,
-                      CourseName: result[i].CourseName,
-                      CurrentMarkAndScore: result[i].CurrentMarkAndScore,
-                      LastUpdated: result[i].LastUpdated,
-                      NumMissingAssignments: result[i].NumMissingAssignments,
-                      PeriodTitle: result[i].PeriodTitle,
-                    });
-                  }
-                  await SecureStore.setItemAsync(
-                    "classes",
-                    JSON.stringify(newClassObject)
-                  );
-                  setTimeout(async () => {
-                    await axios
-                      .post(
-                        "https://ihsbackend.vercel.app/api/accounts/account",
-                        {
-                          studentID: userObj,
-                          name: fullName,
-                          currentGrade: grade,
-                          bearer: tempName,
-                          barcode: "https://barcodeapi.org/api/39/" + userObj,
-                        }
-                      )
-                      .then(async (res) => {
-                        if (!res.data.success) {
-                          alert("Error: " + res.data.message);
-                        } else {
-                          setLoadingVisible(false);
-                          setRefreshVisible(false);
-                          let newRes = res.data.account;
-                          newRes.classes = JSON.parse(
-                            await SecureStore.getItemAsync("classes")
-                          ).sort(
-                            ({ PeriodTitle: a }, { PeriodTitle: b }) =>
-                              Number(a) - Number(b)
-                          );
-                          setAccount(newRes);
-                        }
+                if (tempName != "") {
+                  let result;
+                  try {
+                    setLoadingVisible(true);
+                    result = JSON.parse(JSON.parse(event.nativeEvent.data));
+                    let newClassObject = [];
+                    for (let i = 0; i < result.length; i++) {
+                      newClassObject.push({
+                        RoomNumber: result[i].RoomNumber,
+                        CourseName: result[i].CourseName,
+                        CurrentMarkAndScore: result[i].CurrentMarkAndScore,
+                        LastUpdated: result[i].LastUpdated,
+                        NumMissingAssignments: result[i].NumMissingAssignments,
+                        PeriodTitle: result[i].PeriodTitle,
                       });
-                  }, 1000);
-                } catch (e) {
+                    }
+                    await SecureStore.setItemAsync(
+                      "classes",
+                      JSON.stringify(newClassObject)
+                    );
+                    setTimeout(async () => {
+                      await axios
+                        .post(
+                          "https://ihsbackend.vercel.app/api/accounts/account",
+                          {
+                            studentID: userObj,
+                            name: fullName,
+                            currentGrade: grade,
+                            bearer: tempName,
+                            barcode: "https://barcodeapi.org/api/39/" + userObj,
+                          }
+                        )
+                        .then(async (res) => {
+                          if (!res.data.success) {
+                            alert("Error: " + res.data.message);
+                          } else {
+                            setLoadingVisible(false);
+                            setRefreshVisible(false);
+                            let newRes = res.data.account;
+                            newRes.classes = JSON.parse(
+                              await SecureStore.getItemAsync("classes")
+                            ).sort(
+                              ({ PeriodTitle: a }, { PeriodTitle: b }) =>
+                                Number(a) - Number(b)
+                            );
+                            setAccount(newRes);
+                          }
+                        });
+                    }, 1000);
+                  } catch (e) {
+                    alert(
+                      "Error. Go back to the home screen and try loading this page again."
+                    );
+                  }
+                } else {
                   alert(
-                    "Error. Go back to the home screen and try loading this page again."
+                    "Error. You have logged in using a non-IUSD email (your parents' account?). Reload the app and try again."
                   );
                 }
               }
@@ -370,9 +384,44 @@ function HomeScreen({ navigation }) {
                   marginBottom: 10,
                   textAlign: "center",
                 }}
+                variant="labelMedium"
               >
-                Take a look at your schedule for today.
+                Here's today's schedule,{" "}
+                <Text style={{ fontWeight: "bold", color: "teal" }}>
+                  {new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </Text>
+                .
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "begin",
+                  marginLeft: "5%",
+                }}
+              >
+                <Switch
+                  value={areGradesShowed}
+                  onValueChange={async () => {
+                    if (areGradesShowed) {
+                      await SecureStore.setItemAsync("gradesShowed", "false");
+                    } else {
+                      await SecureStore.setItemAsync("gradesShowed", "true");
+                    }
+                    switchGradesShowed(!areGradesShowed);
+                  }}
+                />
+                <Text
+                  style={{
+                    alignSelf: "center",
+                    marginLeft: 10,
+                  }}
+                >
+                  Show my class grades
+                </Text>
+              </View>
             </View>
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
@@ -392,7 +441,11 @@ function HomeScreen({ navigation }) {
                           key={index + 30}
                         >
                           <Card.Content>
-                            <Title style={{ fontWeight: "bold" }}>Break!</Title>
+                            <Title
+                              style={{ fontWeight: "bold", color: "teal" }}
+                            >
+                              Break!
+                            </Title>
                             <Paragraph>
                               Enjoy your day off!{"\n\n"}(Make sure to check the
                               website for "special" days, like PSAT testing and
@@ -412,11 +465,11 @@ function HomeScreen({ navigation }) {
                       "",
                       "8:30 AM - 9:55 AM",
                       "",
-                      "10:10 AM - 12:05 PM (Rally)",
+                      "10:10 AM - 12:25 PM (Rally)",
                       "",
-                      "12:45 PM - 2:10 PM",
+                      "1:05 PM - 2:20 PM",
                       "",
-                      "2:15 PM - 3:40 PM",
+                      "2:25 PM - 3:40 PM",
                     ];
                     if (Number(d.PeriodTitle) % 2 == 0) {
                       if (Number(d.PeriodTitle) == 2) {
@@ -432,7 +485,9 @@ function HomeScreen({ navigation }) {
                               key={index + 60}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -440,12 +495,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -495,7 +556,9 @@ function HomeScreen({ navigation }) {
                               key={index + 19990}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -503,12 +566,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -534,7 +603,7 @@ function HomeScreen({ navigation }) {
                                       fontSize: 16,
                                     }}
                                   >
-                                    12:05 PM - 12:40 PM
+                                    12:25 PM - 1:00 PM
                                   </Title>
                                 </Title>
                               </Card.Content>
@@ -553,7 +622,9 @@ function HomeScreen({ navigation }) {
                             key={index + 150}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -561,12 +632,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle)]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -583,11 +660,11 @@ function HomeScreen({ navigation }) {
                       "",
                       "8:30 AM - 9:55 AM",
                       "",
-                      "10:10 AM - 12:05 PM (Rally)",
+                      "10:10 AM - 12:25 PM (Rally)",
                       "",
-                      "12:45 PM - 2:10 PM",
+                      "1:05 PM - 2:20 PM",
                       "",
-                      "2:15 PM - 3:40 PM",
+                      "2:25 PM - 3:40 PM",
                     ];
                     if (Number(d.PeriodTitle) % 2 == 1) {
                       if (Number(d.PeriodTitle) == 1) {
@@ -603,7 +680,9 @@ function HomeScreen({ navigation }) {
                               key={index + 180}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -611,12 +690,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -662,7 +747,9 @@ function HomeScreen({ navigation }) {
                               key={index + 240}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -670,12 +757,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -701,7 +794,7 @@ function HomeScreen({ navigation }) {
                                       fontSize: 16,
                                     }}
                                   >
-                                    12:05 PM - 12:40 PM
+                                    12:25 PM - 1:00 PM
                                   </Title>
                                 </Title>
                               </Card.Content>
@@ -720,7 +813,9 @@ function HomeScreen({ navigation }) {
                             key={index + 300}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -728,12 +823,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) + 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -772,7 +873,9 @@ function HomeScreen({ navigation }) {
                               key={index + 330}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -780,12 +883,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) - 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -830,7 +939,9 @@ function HomeScreen({ navigation }) {
                             key={index + 390}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -838,12 +949,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) - 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -880,7 +997,9 @@ function HomeScreen({ navigation }) {
                               key={index + 420}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -888,12 +1007,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -964,7 +1089,9 @@ function HomeScreen({ navigation }) {
                               key={index + 510}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -972,12 +1099,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1022,7 +1155,9 @@ function HomeScreen({ navigation }) {
                             key={index + 570}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1030,12 +1165,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle)]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1072,7 +1213,9 @@ function HomeScreen({ navigation }) {
                               key={index + 600}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1080,12 +1223,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1156,7 +1305,9 @@ function HomeScreen({ navigation }) {
                               key={index + 690}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1164,12 +1315,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1214,7 +1371,9 @@ function HomeScreen({ navigation }) {
                             key={index + 750}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1222,12 +1381,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) + 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1264,7 +1429,9 @@ function HomeScreen({ navigation }) {
                               key={index + 780}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1272,12 +1439,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1346,7 +1519,9 @@ function HomeScreen({ navigation }) {
                               key={index + 870}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1354,12 +1529,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1404,7 +1585,9 @@ function HomeScreen({ navigation }) {
                             key={index + 930}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1412,12 +1595,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) + 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1454,7 +1643,9 @@ function HomeScreen({ navigation }) {
                               key={index + 960}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1462,12 +1653,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1536,7 +1733,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1050}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1544,12 +1743,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1594,7 +1799,9 @@ function HomeScreen({ navigation }) {
                             key={index + 1110}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1602,12 +1809,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle)]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1644,7 +1857,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1140}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1652,12 +1867,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1703,7 +1924,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1200}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1711,12 +1934,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1761,7 +1990,9 @@ function HomeScreen({ navigation }) {
                             key={index + 1260}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1769,12 +2000,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle)]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1811,7 +2048,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1290}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1819,12 +2058,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1870,7 +2115,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1350}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1878,12 +2125,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -1928,7 +2181,9 @@ function HomeScreen({ navigation }) {
                             key={index + 1410}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -1936,12 +2191,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) + 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -1982,7 +2243,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1440}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -1990,12 +2253,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle)]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -2040,7 +2309,9 @@ function HomeScreen({ navigation }) {
                             key={index + 1500}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -2048,12 +2319,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle)]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -2094,7 +2371,9 @@ function HomeScreen({ navigation }) {
                               key={index + 1530}
                             >
                               <Card.Content>
-                                <Title style={{ fontWeight: "bold" }}>
+                                <Title
+                                  style={{ fontWeight: "bold", color: "teal" }}
+                                >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
                                   {"\n"}
@@ -2102,12 +2381,18 @@ function HomeScreen({ navigation }) {
                                     {times[Number(d.PeriodTitle) + 1]}
                                   </Title>
                                 </Title>
-                                {d.CurrentMarkAndScore != "" ? (
-                                  <Paragraph>
-                                    {d.CurrentMarkAndScore}
-                                    {"\n"}
-                                    Last updated: {d.LastUpdated}
-                                  </Paragraph>
+                                {areGradesShowed ? (
+                                  <>
+                                    {d.CurrentMarkAndScore != "" ? (
+                                      <Paragraph>
+                                        {d.CurrentMarkAndScore}
+                                        {"\n"}
+                                        Last updated: {d.LastUpdated}
+                                      </Paragraph>
+                                    ) : (
+                                      <></>
+                                    )}
+                                  </>
                                 ) : (
                                   <></>
                                 )}
@@ -2152,7 +2437,9 @@ function HomeScreen({ navigation }) {
                             key={index + 1590}
                           >
                             <Card.Content>
-                              <Title style={{ fontWeight: "bold" }}>
+                              <Title
+                                style={{ fontWeight: "bold", color: "teal" }}
+                              >
                                 {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                 {d.PeriodTitle}
                                 {"\n"}
@@ -2160,12 +2447,18 @@ function HomeScreen({ navigation }) {
                                   {times[Number(d.PeriodTitle) + 1]}
                                 </Title>
                               </Title>
-                              {d.CurrentMarkAndScore != "" ? (
-                                <Paragraph>
-                                  {d.CurrentMarkAndScore}
-                                  {"\n"}
-                                  Last updated: {d.LastUpdated}
-                                </Paragraph>
+                              {areGradesShowed ? (
+                                <>
+                                  {d.CurrentMarkAndScore != "" ? (
+                                    <Paragraph>
+                                      {d.CurrentMarkAndScore}
+                                      {"\n"}
+                                      Last updated: {d.LastUpdated}
+                                    </Paragraph>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </>
                               ) : (
                                 <></>
                               )}
@@ -2178,20 +2471,25 @@ function HomeScreen({ navigation }) {
                   }
                 }
               })}
+
               <Text
-                style={{ textAlign: "center", marginTop: 10, marginBottom: 10 }}
+                style={{
+                  textAlign: "center",
+                  marginTop: 10,
+                  marginBottom: 10,
+                  fontWeight: "bold",
+                  color: "teal",
+                }}
               >
-                No more classes today!{" "}
-                <Text style={{ fontWeight: "bold", color: "purple" }}>
-                  Last updated{" "}
-                  {new Date(account.lastUpdatedGrades).toLocaleDateString(
-                    "en-us",
-                    {
-                      day: "numeric",
-                      month: "2-digit",
-                    }
-                  )}
-                </Text>
+                Grades updated{" "}
+                {new Date(account.lastUpdatedGrades).toLocaleDateString(
+                  "en-us",
+                  {
+                    day: "numeric",
+                    month: "2-digit",
+                  }
+                )}
+                .
               </Text>
             </ScrollView>
           </SafeAreaView>
@@ -2225,6 +2523,7 @@ export default function OnlineHomePage({ navigation }) {
           name="Clubs"
           options={{
             tabBarShowLabel: false,
+            headerShadowVisible: false,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons
                 name="account-group"

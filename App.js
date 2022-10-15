@@ -3,11 +3,9 @@ import { useState, useEffect } from "react";
 import { StyleSheet, View, Image, Alert, Linking } from "react-native";
 import { WebView } from "react-native-webview";
 import * as Updates from "expo-updates";
-import * as SplashScreen from "expo-splash-screen";
 import {
   Button,
   Text,
-  TextInput,
   Portal,
   Dialog,
   Paragraph,
@@ -22,7 +20,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { Buffer } from "buffer";
-import OnlineHomePage from "./OnlineHomePage.js";
+import OnlineHomePage from "./components/OnlineHomePage.js";
+import ProposeClub from "./components/ProposeClub.js";
+import AddBookmark from "./components/AddBookmark.js";
 import { LogBox } from "react-native";
 
 function Account({ route, navigation }) {
@@ -50,7 +50,7 @@ function Account({ route, navigation }) {
     return (
       <>
         <Portal>
-          <Dialog visible={setVisible} dismissable={false}>
+          <Dialog visible={visible} dismissable={false}>
             <Dialog.Title>Loading...</Dialog.Title>
             <Dialog.Content style={{ height: 300 }}>
               <Paragraph>
@@ -72,7 +72,7 @@ function Account({ route, navigation }) {
           style={{
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#e5f6df",
+            backgroundColor: "#e6fef9",
           }}
         >
           <Text style={{ margin: 10 }}>
@@ -141,97 +141,70 @@ function Account({ route, navigation }) {
                 }
               }
             } else {
-              let result;
-              try {
-                setVisible(true);
-                result = JSON.parse(JSON.parse(event.nativeEvent.data));
-                let newClassObject = [];
-                for (let i = 0; i < result.length; i++) {
-                  newClassObject.push({
-                    RoomNumber: result[i].RoomNumber,
-                    CourseName: result[i].CourseName,
-                    CurrentMarkAndScore: result[i].CurrentMarkAndScore,
-                    LastUpdated: result[i].LastUpdated,
-                    NumMissingAssignments: result[i].NumMissingAssignments,
-                    PeriodTitle: result[i].PeriodTitle,
-                  });
-                }
-                await SecureStore.setItemAsync(
-                  "classes",
-                  JSON.stringify(newClassObject)
-                );
-                setTimeout(async () => {
-                  await axios
-                    .post(
-                      "https://ihsbackend.vercel.app/api/accounts/account",
-                      {
-                        studentID: userObj,
-                        name: fullName,
-                        currentGrade: grade,
-                        bearer: tempName,
-                        barcode: "https://barcodeapi.org/api/39/" + userObj,
-                      }
-                    )
-                    .then(async (res) => {
-                      if (!res.data.success) {
-                        alert("Error: " + res.data.message);
-                        navigation.navigate("Home");
-                      } else {
-                        await SecureStore.setItemAsync("isLocal", "false");
-                        await SecureStore.setItemAsync("bearer", tempName);
-                        await SecureStore.setItemAsync(
-                          "notifications",
-                          "false"
-                        );
-                      }
+              if (tempName != "") {
+                let result;
+                try {
+                  setVisible(true);
+                  result = JSON.parse(JSON.parse(event.nativeEvent.data));
+                  let newClassObject = [];
+                  for (let i = 0; i < result.length; i++) {
+                    newClassObject.push({
+                      RoomNumber: result[i].RoomNumber,
+                      CourseName: result[i].CourseName,
+                      CurrentMarkAndScore: result[i].CurrentMarkAndScore,
+                      LastUpdated: result[i].LastUpdated,
+                      NumMissingAssignments: result[i].NumMissingAssignments,
+                      PeriodTitle: result[i].PeriodTitle,
                     });
-                }, 1000);
-              } catch (e) {
+                  }
+                  await SecureStore.setItemAsync(
+                    "classes",
+                    JSON.stringify(newClassObject)
+                  );
+                  setTimeout(async () => {
+                    await axios
+                      .post(
+                        "https://ihsbackend.vercel.app/api/accounts/account",
+                        {
+                          studentID: userObj,
+                          name: fullName,
+                          currentGrade: grade,
+                          bearer: tempName,
+                          barcode: "https://barcodeapi.org/api/39/" + userObj,
+                        }
+                      )
+                      .then(async (res) => {
+                        if (!res.data.success) {
+                          alert("Error: " + res.data.message);
+                          navigation.navigate("Home");
+                        } else {
+                          await SecureStore.setItemAsync("isLocal", "false");
+                          await SecureStore.setItemAsync("bearer", tempName);
+                          await SecureStore.setItemAsync(
+                            "notifications",
+                            "false"
+                          );
+                          await SecureStore.setItemAsync(
+                            "gradesShowed",
+                            "true"
+                          );
+                        }
+                      });
+                  }, 1000);
+                } catch (e) {
+                  alert(
+                    "Error. Go back to the home screen and try loading this page again."
+                  );
+                }
+              } else {
                 alert(
-                  "Error. Go back to the home screen and try loading this page again."
+                  "Error. You have logged in using a non-IUSD email (your parents' account?). Reload the app and try again."
                 );
               }
             }
           }}
         />
       </>
-    );
-  } else {
-    return (
-      <View style={styles.container}>
-        <Text variant="titleLarge" style={{ fontWeight: "bold", margin: 10 }}>
-          Set up IHS mobile locally
-        </Text>
-        <Text style={{ fontWeight: "bold" }}>
-          Your data will only be stored on this device.
-        </Text>
-        <Text style={{ margin: 10 }}>
-          All we need is your name. You'll add your classes later.
-        </Text>
-        <TextInput
-          label="Full name"
-          autoCorrect="false"
-          value={localName}
-          style={{ width: 300, margin: 10 }}
-          onChangeText={(localName) => setLocalName(localName)}
-        />
-        <Button
-          mode="elevated"
-          disabled={localName == ""}
-          style={{ margin: 10 }}
-          contentStyle={{ minWidth: 300 }}
-          onPress={async () => {
-            try {
-              await SecureStore.setItemAsync("isLocal", "true");
-              await SecureStore.setItemAsync("name", localName);
-            } catch (e) {
-              alert(e);
-            }
-          }}
-        >
-          Let's go!
-        </Button>
-      </View>
     );
   }
 }
@@ -300,8 +273,6 @@ function Landing({ navigation }) {
 }
 const Stack = createNativeStackNavigator();
 
-SplashScreen.preventAutoHideAsync();
-
 export default function App() {
   const [isSignedIn, setSignedIn] = useState(false);
   const [isLoading, setLoading] = useState(true);
@@ -328,7 +299,6 @@ export default function App() {
           }
         }
         setLoading(false);
-        SplashScreen.hideAsync();
       } catch (e) {
         alert(e);
       }
@@ -375,11 +345,33 @@ export default function App() {
                     />
                   </>
                 ) : (
-                  <Stack.Screen
-                    name="HomePage"
-                    options={{ headerShown: false }}
-                    component={OnlineHomePage}
-                  />
+                  <>
+                    <Stack.Group>
+                      <Stack.Screen
+                        name="HomePage"
+                        options={{ headerShown: false }}
+                        component={OnlineHomePage}
+                      />
+                    </Stack.Group>
+                    <Stack.Group screenOptions={{ presentation: "modal" }}>
+                      <Stack.Screen
+                        name="Add your club"
+                        options={{
+                          headerLargeTitle: true,
+                          headerShadowVisible: false,
+                        }}
+                        component={ProposeClub}
+                      />
+                      <Stack.Screen
+                        name="Add a bookmark"
+                        options={{
+                          headerLargeTitle: true,
+                          headerShadowVisible: false,
+                        }}
+                        component={AddBookmark}
+                      />
+                    </Stack.Group>
+                  </>
                 )}
               </Stack.Navigator>
             </NavigationContainer>
@@ -403,7 +395,7 @@ const theme = {
   version: 3,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#329C2D",
+    primary: "teal",
     secondary: "#00cccc",
   },
 };
@@ -411,13 +403,13 @@ const theme = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#e5f6df",
+    backgroundColor: "#e6fef9",
     alignItems: "center",
     justifyContent: "center",
   },
   topContainer: {
     flex: 1,
-    backgroundColor: "#e5f6df",
+    backgroundColor: "#e6fef9",
     alignItems: "center",
     padding: 10,
   },

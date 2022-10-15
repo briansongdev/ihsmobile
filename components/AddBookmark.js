@@ -74,7 +74,7 @@ export default function AddBookmark({ navigation }) {
                   Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success
                   );
-                  navigation.navigate("Home");
+                  navigation.goBack();
                 } else {
                   alert(
                     "Unsuccessful. Check your internet connection and try again."

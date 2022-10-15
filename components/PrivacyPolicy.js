@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { StyleSheet, View, ScrollView, Dimensions } from "react-native";
-import { Button } from "react-native-paper";
+import { Button, Card, Paragraph } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import WebView from "react-native-webview";
 
@@ -19,7 +19,7 @@ export default function PrivacyPolicy({ navigation }) {
             style={{ margin: 5 }}
             onPress={() => navigation.goBack()}
           >
-            Return
+            Return and login
           </Button>
           <WebView
             automaticallyAdjustContentInsets={false}

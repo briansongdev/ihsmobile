@@ -102,10 +102,11 @@ export default function ClubScreen({ navigation }) {
               .then((res) => {
                 if (res.data.success) {
                   alert("Success! Thank you.");
-                  navigation.navigate("Home");
+                  navigation.goBack();
                   setClubObj({});
                 } else {
-                  navigation.navigate("Home");
+                  alert("Error. Please check your internet connection.");
+                  navigation.goBack();
                   setClubObj({});
                 }
               });

@@ -85,25 +85,18 @@ function Account({ route, navigation }) {
             backgroundColor: "#e6fef9",
           }}
         >
-          <Text style={{ marginTop: 10, marginLeft: 10, marginRight: 10 }}>
-            Welcome. To get started, read our privacy policy first. Then, sign
-            in with your{" "}
-            <Text style={{ fontWeight: "bold" }}>
-              IUSD email (thru Google).
-            </Text>
-          </Text>
-          <Button
-            mode="text"
-            textColor="teal"
-            icon="chevron-right-circle"
-            style={{ margin: 10 }}
-            onPress={() => {
-              setPP(true);
-              navigation.navigate("Privacy Policy");
-            }}
-          >
-            Our Privacy Policy
-          </Button>
+          {viewedPP ? (
+            <>
+              <Text style={{ margin: 10, fontSize: 18, color: "red" }}>
+                Please login with your{" "}
+                <Text style={{ fontWeight: "bold", color: "red" }}>
+                  IUSD email (thru Google).
+                </Text>
+              </Text>
+            </>
+          ) : (
+            <></>
+          )}
         </View>
         {viewedPP ? (
           <WebView
@@ -150,6 +143,13 @@ function Account({ route, navigation }) {
                           .split('"')
                           .join("")
                       )
+                    );
+                    await SecureStore.setItemAsync(
+                      "uid",
+                      event.nativeEvent.data
+                        .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
+                        .split('"')
+                        .join("")
                     );
                   } else {
                     alert("You are not a part of Irvine High School.");
@@ -204,7 +204,6 @@ function Account({ route, navigation }) {
                               "gradesShowed",
                               "true"
                             );
-                            await SecureStore.setItemAsync("uid", userObj);
                           }
                         });
                     }, 1000);
@@ -222,16 +221,41 @@ function Account({ route, navigation }) {
             }}
           />
         ) : (
-          <View style={styles.container}>
+          <View style={styles.topContainer}>
             <Card style={{ margin: 15, borderRadius: 15 }}>
               <Card.Content>
                 <Paragraph>
-                  Please review the Privacy Policy (above) and return to this
-                  screen when you have finished reading. By continuing to sign
-                  in, you affirm that you agree to our Privacy Policy.{" "}
-                  <Text style={{ fontWeight: "bold" }}>Thank you.</Text>
+                  <Text style={{ fontWeight: "bold" }}>
+                    Important data notice:{" "}
+                  </Text>
+                  We use a private, secure, online server to store certain data
+                  to best serve you as the end user. These include:
+                  {"\n"}- Your name{"\n"}- An encrypted, personally-identifiable
+                  bearer token (to authorize your requests){"\n"}- Your grade
+                  level{"\n"}- Any schedule or bookmarks you create within our
+                  app (required for push notifications to work, and allows you
+                  to access this data from any device){"\n\n"}
+                  <Text style={{ fontWeight: "bold" }}>
+                    To get started, read our privacy policy first.
+                  </Text>{" "}
+                  <Text style={{ color: "teal" }}>
+                    By continuing to login, you affirm that you agree to our
+                    Privacy Policy.
+                  </Text>
                 </Paragraph>
               </Card.Content>
+              <Button
+                mode="text"
+                textColor="teal"
+                icon="chevron-right-circle"
+                style={{ margin: 10 }}
+                onPress={() => {
+                  setPP(true);
+                  navigation.navigate("Privacy Policy");
+                }}
+              >
+                Our Privacy Policy
+              </Button>
             </Card>
           </View>
         )}

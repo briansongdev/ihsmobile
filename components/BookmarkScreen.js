@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
-  KeyboardAvoidingView,
   ScrollView,
   Dimensions,
   Alert,
@@ -208,7 +207,7 @@ export default function ClubScreen({ navigation }) {
                         marginLeft: 35,
                         marginRight: 35,
                         marginTop: 15,
-                        backgroundColor: "#e9e9e9",
+                        backgroundColor: "#dedede",
                       }}
                       mode="contained"
                     >

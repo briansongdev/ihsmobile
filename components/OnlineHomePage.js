@@ -82,8 +82,9 @@ function HomeScreen({ navigation }) {
               );
               setAccount(newRes);
               setURI(
-                "https://barcodeapi.org/api/39/" +
-                  (await SecureStore.getItemAsync("uid"))
+                "https://barcode.tec-it.com/barcode.ashx?data=" +
+                  (await SecureStore.getItemAsync("uid")) +
+                  "&code=Code39"
               );
             } else {
               await SecureStore.deleteItemAsync("isLocal");
@@ -185,7 +186,7 @@ function HomeScreen({ navigation }) {
       });
     };
     hi();
-  }, [account, calendar, areGradesShowed]);
+  }, [account, calendar, areGradesShowed, tempName]);
   if (Object.keys(account).length == 0 || calendar.length == 0) {
     return (
       <View style={styles.topContainer}>
@@ -254,6 +255,13 @@ function HomeScreen({ navigation }) {
                           .join("")
                       )
                     );
+                    await SecureStore.setItemAsync(
+                      "uid",
+                      event.nativeEvent.data
+                        .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
+                        .split('"')
+                        .join("")
+                    );
                   } else {
                     alert("You are not a part of Irvine High School.");
                     navigation.navigate("Home");
@@ -309,11 +317,7 @@ function HomeScreen({ navigation }) {
                           }
                         });
                     }, 1000);
-                  } catch (e) {
-                    alert(
-                      "Error. Go back to the home screen and try loading this page again."
-                    );
-                  }
+                  } catch (e) {}
                 } else {
                   alert(
                     "Error. You have logged in using a non-IUSD email (your parents' account?). Reload the app and try again."
@@ -344,10 +348,9 @@ function HomeScreen({ navigation }) {
                   {uid} {"\n"}
                   <Text style={{ fontWeight: "bold" }}>ID Card:</Text>
                 </Text>
-
                 <View style={{ alignItems: "center" }}>
                   <Image
-                    style={{ height: 130, width: 400, margin: 10 }}
+                    style={{ height: 100, width: 350, margin: 10 }}
                     source={{
                       uri: relevantURI,
                     }}
@@ -375,7 +378,7 @@ function HomeScreen({ navigation }) {
             <View style={{ backgroundColor: "#e6fef9" }}>
               <Text
                 style={{ marginLeft: 10, textAlign: "center" }}
-                variant="headlineLarge"
+                variant="displaySmall"
               >
                 {greetingTime(new Date())},{" "}
                 <Text style={{ fontWeight: "bold" }}>
@@ -391,42 +394,21 @@ function HomeScreen({ navigation }) {
                 }}
                 variant="labelMedium"
               >
-                Here's today's schedule,{" "}
+                {" "}
                 <Text style={{ fontWeight: "bold", color: "teal" }}>
                   {new Date().toLocaleDateString("en-US", {
-                    month: "short",
+                    month: "long",
                     day: "numeric",
+                    year: "numeric",
                   })}
                 </Text>
-                .
               </Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "begin",
-                  marginLeft: "5%",
-                }}
+              <Text
+                variant="headlineLarge"
+                style={{ color: "teal", marginLeft: "5%" }}
               >
-                <Switch
-                  value={areGradesShowed}
-                  onValueChange={async () => {
-                    if (areGradesShowed) {
-                      await SecureStore.setItemAsync("gradesShowed", "false");
-                    } else {
-                      await SecureStore.setItemAsync("gradesShowed", "true");
-                    }
-                    switchGradesShowed(!areGradesShowed);
-                  }}
-                />
-                <Text
-                  style={{
-                    alignSelf: "center",
-                    marginLeft: 10,
-                  }}
-                >
-                  Show my class grades
-                </Text>
-              </View>
+                Coming up...
+              </Text>
             </View>
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
@@ -476,81 +458,197 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:25 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [0, 0],
+                      [9, 55],
+                      [10, 5],
+                      [12, 25],
+                      [13, 0],
+                      [14, 20],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 0) {
                       if (Number(d.PeriodTitle) == 2) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 60}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle)]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={
-                                d.CourseName +
-                                d.CurrentMarkAndScore +
-                                d.LastUpdated
-                              }
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 60}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
+                                      fontWeight: "bold",
+                                      color: "teal",
                                     }}
                                   >
-                                    9:55 AM - 10:05 AM
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={
+                                  d.CourseName +
+                                  d.CurrentMarkAndScore +
+                                  d.LastUpdated
+                                }
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      9:55 AM - 10:05 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 19990}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 120}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:25 PM - 1:00 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -558,7 +656,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 19990}
+                              key={index + 150}
                             >
                               <Card.Content>
                                 <Title
@@ -588,73 +686,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 120}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:25 PM - 1:00 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 150}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle)]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -671,77 +704,194 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:25 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [9, 55],
+                      [10, 5],
+                      [12, 25],
+                      [13, 0],
+                      [14, 20],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 1) {
                       if (Number(d.PeriodTitle) == 1) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 180}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle) + 1]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 210}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[1][0] ||
+                            (hr == chokepoints[1][0] &&
+                              min < chokepoints[1][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 180}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 210}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    9:55 AM - 10:05 AM
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      9:55 AM - 10:05 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 3) {
                         return (
                           <>
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 240}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 270}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:25 PM - 1:00 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -749,7 +899,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 240}
+                              key={index + 300}
                             >
                               <Card.Content>
                                 <Title
@@ -779,73 +929,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 270}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:25 PM - 1:00 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 300}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) + 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -861,6 +946,19 @@ function HomeScreen({ navigation }) {
                       "11:40 AM - 12:05 PM",
                       "12:10 PM - 12:35 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [10, 35],
+                      [8, 55],
+                      [9, 25],
+                      [9, 55],
+                      [10, 25],
+                      [11, 5],
+                      [11, 35],
+                      [12, 5],
+                      [12, 35],
+                    ];
                     if (
                       Number(d.PeriodTitle) > 0 &&
                       Number(d.PeriodTitle) < 9
@@ -868,6 +966,94 @@ function HomeScreen({ navigation }) {
                       if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 330}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) - 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[0][0] ||
+                            (hr == chokepoints[0][0] &&
+                              min < chokepoints[0][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 360}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -875,7 +1061,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 330}
+                              key={index + 390}
                             >
                               <Card.Content>
                                 <Title
@@ -905,73 +1091,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 360}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    10:25 AM - 10:35 AM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 390}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) - 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -988,102 +1109,228 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [10, 25],
+                      [0, 0],
+                      [9, 55],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 0) {
                       if (Number(d.PeriodTitle) == 2) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 420}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle)]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 450}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Flex Time -{" "}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 420}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[0][0] ||
+                            (hr == chokepoints[0][0] &&
+                              min < chokepoints[0][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 450}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:00 AM - 10:25 AM
+                                    Flex Time -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:00 AM - 10:25 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 480}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 480}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 510}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 540}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -1091,7 +1338,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 510}
+                              key={index + 570}
                             >
                               <Card.Content>
                                 <Title
@@ -1121,73 +1368,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 540}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 570}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle)]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -1204,102 +1386,227 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [10, 25],
+                      [9, 55],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 1) {
                       if (Number(d.PeriodTitle) == 1) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 600}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle) + 1]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 630}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Flex Time -{" "}
+                            {hr < chokepoints[1][0] ||
+                            (hr == chokepoints[1][0] &&
+                              min < chokepoints[1][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 600}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[0][0] ||
+                            (hr == chokepoints[0][0] &&
+                              min < chokepoints[0][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 630}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:00 AM - 10:25 AM
+                                    Flex Time -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:00 AM - 10:25 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 660}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 660}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 3) {
                         return (
                           <>
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 690}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 720}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -1307,7 +1614,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 690}
+                              key={index + 750}
                             >
                               <Card.Content>
                                 <Title
@@ -1337,73 +1644,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 720}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 750}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) + 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -1420,100 +1662,226 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [10, 25],
+                      [9, 55],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 1) {
                       if (Number(d.PeriodTitle) == 1) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 780}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle) + 1]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 810}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Advisement -{" "}
-                                  {
-                                    account.classes.find(
-                                      (de) => de.PeriodTitle == "TA"
-                                    ).RoomNumber
-                                  }{" "}
-                                  - 10:00 AM - 10:25 AM
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 840}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[1][0] ||
+                            (hr == chokepoints[1][0] &&
+                              min < chokepoints[1][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 780}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[0][0] ||
+                            (hr == chokepoints[0][0] &&
+                              min < chokepoints[0][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 810}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Advisement -{" "}
+                                    {
+                                      account.classes.find(
+                                        (de) => de.PeriodTitle == "TA"
+                                      ).RoomNumber
+                                    }{" "}
+                                    - 10:00 AM - 10:25 AM
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 840}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 3) {
                         return (
                           <>
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 870}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 900}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -1521,7 +1889,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 870}
+                              key={index + 930}
                             >
                               <Card.Content>
                                 <Title
@@ -1551,73 +1919,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 900}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 930}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) + 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -1634,100 +1937,227 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [10, 25],
+                      [0, 0],
+                      [9, 55],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 0) {
                       if (Number(d.PeriodTitle) == 2) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 960}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle)]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 990}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Advisement -{" "}
-                                  {
-                                    account.classes.find(
-                                      (de) => de.PeriodTitle == "TA"
-                                    ).RoomNumber
-                                  }{" "}
-                                  - 10:00 AM - 10:25 AM
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1020}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 960}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[0][0] ||
+                            (hr == chokepoints[0][0] &&
+                              min < chokepoints[0][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 990}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Advisement -{" "}
+                                    {
+                                      account.classes.find(
+                                        (de) => de.PeriodTitle == "TA"
+                                      ).RoomNumber
+                                    }{" "}
+                                    - 10:00 AM - 10:25 AM
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1020}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1050}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1080}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -1735,7 +2165,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 1050}
+                              key={index + 1110}
                             >
                               <Card.Content>
                                 <Title
@@ -1765,73 +2195,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1080}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 1110}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle)]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -1848,77 +2213,195 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [0, 0],
+                      [10, 25],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 0) {
                       if (Number(d.PeriodTitle) == 2) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1140}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle)]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1170}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1140}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1170}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1200}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1230}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -1926,7 +2409,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 1200}
+                              key={index + 1260}
                             >
                               <Card.Content>
                                 <Title
@@ -1956,73 +2439,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1230}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 1260}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle)]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -2039,77 +2457,194 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [10, 25],
+                      [10, 35],
+                      [12, 5],
+                      [12, 40],
+                      [14, 10],
+                      [0, 0],
+                      [15, 40],
+                    ];
                     if (Number(d.PeriodTitle) % 2 == 1) {
                       if (Number(d.PeriodTitle) == 1) {
                         return (
                           <>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1290}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
-                                >
-                                  {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                  {d.PeriodTitle}
-                                  {"\n"}
-                                  <Title style={{ fontWeight: "normal" }}>
-                                    {times[Number(d.PeriodTitle) + 1]}
-                                  </Title>
-                                </Title>
-                                {areGradesShowed ? (
-                                  <>
-                                    {d.CurrentMarkAndScore != "" ? (
-                                      <Paragraph>
-                                        {d.CurrentMarkAndScore}
-                                        {"\n"}
-                                        Last updated: {d.LastUpdated}
-                                      </Paragraph>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </Card.Content>
-                            </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1320}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
+                            {hr < chokepoints[1][0] ||
+                            (hr == chokepoints[1][0] &&
+                              min < chokepoints[1][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1290}
+                              >
+                                <Card.Content>
                                   <Title
                                     style={{
-                                      fontWeight: "normal",
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[2][0] ||
+                            (hr == chokepoints[2][0] &&
+                              min < chokepoints[2][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1320}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
                                       fontSize: 16,
                                     }}
                                   >
-                                    10:25 AM - 10:35 AM
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:25 AM - 10:35 AM
+                                    </Title>
                                   </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
                           </>
                         );
                       } else if (Number(d.PeriodTitle) == 3) {
                         return (
                           <>
+                            {hr < chokepoints[3][0] ||
+                            (hr == chokepoints[3][0] &&
+                              min < chokepoints[3][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1350}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1380}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Lunch -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      12:05 PM - 12:40 PM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -2117,7 +2652,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 1350}
+                              key={index + 1410}
                             >
                               <Card.Content>
                                 <Title
@@ -2147,73 +2682,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1380}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Lunch -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    12:05 PM - 12:40 PM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 1410}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) + 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -2230,6 +2700,19 @@ function HomeScreen({ navigation }) {
                       "",
                       "11:55 AM - 12:55 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [0, 0],
+                      [9, 30],
+                      [10, 5],
+                      [10, 35],
+                      [10, 45],
+                      [11, 50],
+                      [0, 0],
+                      [12, 55],
+                    ];
                     if (
                       Number(d.PeriodTitle) > 0 &&
                       Number(d.PeriodTitle) < 9 &&
@@ -2238,6 +2721,94 @@ function HomeScreen({ navigation }) {
                       if (Number(d.PeriodTitle) == 4) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1440}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle)]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1470}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:35 AM - 10:45 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -2245,7 +2816,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 1440}
+                              key={index + 1500}
                             >
                               <Card.Content>
                                 <Title
@@ -2275,73 +2846,8 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1470}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    10:35 AM - 10:45 AM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 1500}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle)]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
@@ -2358,6 +2864,19 @@ function HomeScreen({ navigation }) {
                       "",
                       "11:55 AM - 12:55 PM",
                     ];
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
+                    const chokepoints = [
+                      [0, 0],
+                      [0, 0],
+                      [9, 30],
+                      [10, 5],
+                      [10, 35],
+                      [10, 45],
+                      [11, 50],
+                      [0, 0],
+                      [12, 55],
+                    ];
                     if (
                       Number(d.PeriodTitle) > 0 &&
                       Number(d.PeriodTitle) < 9 &&
@@ -2366,6 +2885,94 @@ function HomeScreen({ navigation }) {
                       if (Number(d.PeriodTitle) == 3) {
                         return (
                           <>
+                            {hr < chokepoints[4][0] ||
+                            (hr == chokepoints[4][0] &&
+                              min < chokepoints[4][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1530}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      fontWeight: "bold",
+                                      color: "teal",
+                                    }}
+                                  >
+                                    {d.CourseName} - Room {d.RoomNumber} - Per{" "}
+                                    {d.PeriodTitle}
+                                    {"\n"}
+                                    <Title style={{ fontWeight: "normal" }}>
+                                      {times[Number(d.PeriodTitle) + 1]}
+                                    </Title>
+                                  </Title>
+                                  {areGradesShowed ? (
+                                    <>
+                                      {d.CurrentMarkAndScore != "" ? (
+                                        <Paragraph>
+                                          {d.CurrentMarkAndScore}
+                                          {"\n"}
+                                          Last updated: {d.LastUpdated}
+                                        </Paragraph>
+                                      ) : (
+                                        <></>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                            {hr < chokepoints[5][0] ||
+                            (hr == chokepoints[5][0] &&
+                              min < chokepoints[5][1]) ? (
+                              <Card
+                                style={{
+                                  marginLeft: 15,
+                                  marginRight: 15,
+                                  marginTop: 10,
+                                  borderRadius: 10,
+                                }}
+                                key={index + 1560}
+                              >
+                                <Card.Content>
+                                  <Title
+                                    style={{
+                                      textAlign: "center",
+                                      fontSize: 16,
+                                    }}
+                                  >
+                                    Break -{" "}
+                                    <Title
+                                      style={{
+                                        fontWeight: "normal",
+                                      }}
+                                    >
+                                      10:35 AM - 10:45 AM
+                                    </Title>
+                                  </Title>
+                                </Card.Content>
+                              </Card>
+                            ) : (
+                              <></>
+                            )}
+                          </>
+                        );
+                      } else {
+                        if (
+                          hr < chokepoints[Number(d.PeriodTitle)][0] ||
+                          (hr == chokepoints[Number(d.PeriodTitle)][0] &&
+                            min < chokepoints[Number(d.PeriodTitle)][1])
+                        ) {
+                          return (
                             <Card
                               style={{
                                 marginLeft: 15,
@@ -2373,7 +2980,7 @@ function HomeScreen({ navigation }) {
                                 marginTop: 10,
                                 borderRadius: 10,
                               }}
-                              key={index + 1530}
+                              key={index + 1590}
                             >
                               <Card.Content>
                                 <Title
@@ -2403,99 +3010,64 @@ function HomeScreen({ navigation }) {
                                 )}
                               </Card.Content>
                             </Card>
-                            <Card
-                              style={{
-                                marginLeft: 15,
-                                marginRight: 15,
-                                marginTop: 10,
-                                borderRadius: 10,
-                              }}
-                              key={index + 1560}
-                            >
-                              <Card.Content>
-                                <Title
-                                  style={{ textAlign: "center", fontSize: 16 }}
-                                >
-                                  Break -{" "}
-                                  <Title
-                                    style={{
-                                      fontWeight: "normal",
-                                      fontSize: 16,
-                                    }}
-                                  >
-                                    10:35 AM - 10:45 AM
-                                  </Title>
-                                </Title>
-                              </Card.Content>
-                            </Card>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <Card
-                            style={{
-                              marginLeft: 15,
-                              marginRight: 15,
-                              marginTop: 10,
-                              borderRadius: 10,
-                            }}
-                            key={index + 1590}
-                          >
-                            <Card.Content>
-                              <Title
-                                style={{ fontWeight: "bold", color: "teal" }}
-                              >
-                                {d.CourseName} - Room {d.RoomNumber} - Per{" "}
-                                {d.PeriodTitle}
-                                {"\n"}
-                                <Title style={{ fontWeight: "normal" }}>
-                                  {times[Number(d.PeriodTitle) + 1]}
-                                </Title>
-                              </Title>
-                              {areGradesShowed ? (
-                                <>
-                                  {d.CurrentMarkAndScore != "" ? (
-                                    <Paragraph>
-                                      {d.CurrentMarkAndScore}
-                                      {"\n"}
-                                      Last updated: {d.LastUpdated}
-                                    </Paragraph>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </>
-                              ) : (
-                                <></>
-                              )}
-                            </Card.Content>
-                          </Card>
-                        );
+                          );
+                        }
                       }
                     }
                     break;
                   }
                 }
               })}
-
-              <Text
+              <View
                 style={{
-                  textAlign: "center",
+                  flexDirection: "row",
+                  justifyContent: "begin",
+                  marginLeft: "5%",
                   marginTop: 10,
-                  marginBottom: 10,
-                  fontWeight: "bold",
-                  color: "teal",
                 }}
               >
-                Grades updated{" "}
-                {new Date(account.lastUpdatedGrades).toLocaleDateString(
-                  "en-us",
-                  {
-                    day: "numeric",
-                    month: "2-digit",
-                  }
-                )}
-                .
-              </Text>
+                <Switch
+                  value={areGradesShowed}
+                  onValueChange={async () => {
+                    if (areGradesShowed) {
+                      await SecureStore.setItemAsync("gradesShowed", "false");
+                    } else {
+                      await SecureStore.setItemAsync("gradesShowed", "true");
+                    }
+                    switchGradesShowed(!areGradesShowed);
+                  }}
+                />
+                <Text
+                  style={{
+                    alignSelf: "center",
+                    marginLeft: 10,
+                    color: "teal",
+                  }}
+                >
+                  Turn grades on/off
+                  {areGradesShowed ? (
+                    <Text
+                      style={{
+                        marginBottom: 10,
+                        fontWeight: "bold",
+                        color: "teal",
+                      }}
+                    >
+                      {"\n"}Grades updated{" "}
+                      {new Date(account.lastUpdatedGrades).toLocaleDateString(
+                        "en-us",
+                        {
+                          day: "numeric",
+                          month: "2-digit",
+                        }
+                      )}
+                      .
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
+                </Text>
+              </View>
             </ScrollView>
           </SafeAreaView>
         </>

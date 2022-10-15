@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Button,
   Text,
@@ -79,7 +80,45 @@ export default function ClubScreen({ navigation }) {
       });
     }
     fetchClubs();
-  }, []);
+  }, [favoritedClubs]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUser = async () => {
+        await axios
+          .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
+          .then((res) => {
+            setClubs(res.data.clubs);
+          });
+        await axios
+          .get("https://ihsbackend.vercel.app/api/accounts/account", {
+            headers: {
+              bearer: await SecureStore.getItemAsync("bearer"),
+            },
+          })
+          .then(async (res) => {
+            if (res.data.success) {
+              setFavoritedClubs(res.data.account.favoritedClubs);
+            } else {
+              console.log(res.data.message);
+            }
+          })
+          .catch(async (err) => {
+            await SecureStore.deleteItemAsync("isLocal");
+            await SecureStore.deleteItemAsync("bearer");
+            await SecureStore.deleteItemAsync("classes");
+            alert(
+              "We have run into an error. Please force-quit the app and restart."
+            );
+          });
+      };
+
+      fetchUser();
+
+      return () => {};
+    }, [])
+  );
+
   if (!clubs || !favoritedClubs) {
     return (
       <View style={styles.topContainer}>
@@ -91,7 +130,7 @@ export default function ClubScreen({ navigation }) {
       <View style={styles.container}>
         <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
           <Card.Content>
-            <Title>Board member of an existing club?</Title>
+            <Title>President of an existing club?</Title>
             <Paragraph>Add your club to the app here.</Paragraph>
           </Card.Content>
           <Card.Actions>
@@ -145,7 +184,14 @@ export default function ClubScreen({ navigation }) {
               })
               .map((d) => {
                 return (
-                  <Card style={{ borderRadius: 15, margin: 15 }}>
+                  <Card
+                    style={{
+                      borderRadius: 15,
+                      marginLeft: 15,
+                      marginRight: 15,
+                      marginTop: 5,
+                    }}
+                  >
                     <Card.Title
                       title={
                         d.clubName + " // Meetings in " + d.clubMeetingRoom
@@ -200,7 +246,14 @@ export default function ClubScreen({ navigation }) {
                 }
                 if (!inFavorite) {
                   return (
-                    <Card style={{ borderRadius: 15, margin: 15 }}>
+                    <Card
+                      style={{
+                        borderRadius: 15,
+                        marginLeft: 15,
+                        marginRight: 15,
+                        marginTop: 5,
+                      }}
+                    >
                       <Card.Title
                         title={
                           d.clubName + " // Meetings in " + d.clubMeetingRoom
@@ -222,7 +275,6 @@ export default function ClubScreen({ navigation }) {
                                 )
                                 .then((res) => {
                                   if (res.data.success) {
-                                    alert("Success!");
                                     setFavoritedClubs(res.data.clubs);
                                   } else {
                                     alert(res.data.message);

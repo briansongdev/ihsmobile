@@ -21,7 +21,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use of Face ID authentication is to allow user to conveniently and privately access sensitive information."
-      }
+      },
+      "bundleIdentifier": "com.briansapps.ihsmobile"
     },
     "android": {
       "googleServicesFile": "./google-services.json",

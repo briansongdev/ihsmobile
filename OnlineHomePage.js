@@ -328,17 +328,15 @@ function HomeScreen({ navigation }) {
 
                 <View style={{ alignItems: "center" }}>
                   <Image
-                    style={{ height: 150, width: 360, margin: 10 }}
+                    style={{ height: 130, width: 400, margin: 10 }}
                     source={{
                       uri: relevantURI,
                     }}
                   />
                   <Paragraph>
-                    To allow physical scanners (e.g. during flextime) to scan
-                    your phone,{" "}
-                    <Text style={{ fontWeight: "bold" }}>
-                      turn your screen brightness to the maximum.
-                    </Text>
+                    Please note, the QR code is only another form of
+                    identification, and it cannot be scanned with a physical
+                    scanner (i.e. for flextime check-ins).
                   </Paragraph>
                 </View>
               </Dialog.Content>

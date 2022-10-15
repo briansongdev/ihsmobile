@@ -254,52 +254,66 @@ export default function CalendarScreen({ navigation }) {
               </Paragraph>
             </Dialog.Content>
             <Dialog.Actions>
-              <Button
-                textColor="red"
-                onPress={async () => {
-                  setLoading(true);
-                  await axios.post(
-                    "https://ihsbackend.vercel.app/api/accounts/addNotification",
-                    {
-                      bearer: await SecureStore.getItemAsync("bearer"),
-                      deviceUID: "",
-                    }
-                  );
-                  await SecureStore.setItemAsync("notifications", "false");
-                  setLoading(false);
-                  setBell(false);
-                }}
-              >
-                Turn off notifications
+              <Button textColor="red" onPress={() => setBell(false)}>
+                Cancel
               </Button>
-              <Button
-                textColor="blue"
-                onPress={async () => {
-                  registerForPushNotificationsAsync().then((token) =>
-                    setExpoPushToken(token)
-                  );
-                  await axios
-                    .post(
+              {notisOn ? (
+                <Button
+                  textColor="red"
+                  onPress={async () => {
+                    setLoading(true);
+                    await axios.post(
                       "https://ihsbackend.vercel.app/api/accounts/addNotification",
                       {
                         bearer: await SecureStore.getItemAsync("bearer"),
-                        deviceUID: await registerForPushNotificationsAsync(),
+                        deviceUID: "",
                       }
-                    )
-                    .then(async (res) => {
-                      if (!res.data.success) {
-                        alert(
-                          "Your request to enable notifications was not received. Please try again."
-                        );
-                      } else {
-                        await SecureStore.setItemAsync("notifications", "true");
-                        setBell(false);
-                      }
-                    });
-                }}
-              >
-                Allow notifications
-              </Button>
+                    );
+                    await SecureStore.setItemAsync("notifications", "false");
+                    setLoading(false);
+                    setBell(false);
+                  }}
+                >
+                  Turn off notifications
+                </Button>
+              ) : (
+                <></>
+              )}
+              {!notisOn ? (
+                <Button
+                  textColor="blue"
+                  onPress={async () => {
+                    registerForPushNotificationsAsync().then((token) =>
+                      setExpoPushToken(token)
+                    );
+                    await axios
+                      .post(
+                        "https://ihsbackend.vercel.app/api/accounts/addNotification",
+                        {
+                          bearer: await SecureStore.getItemAsync("bearer"),
+                          deviceUID: await registerForPushNotificationsAsync(),
+                        }
+                      )
+                      .then(async (res) => {
+                        if (!res.data.success) {
+                          alert(
+                            "Your request to enable notifications was not received. Please try again."
+                          );
+                        } else {
+                          await SecureStore.setItemAsync(
+                            "notifications",
+                            "true"
+                          );
+                          setBell(false);
+                        }
+                      });
+                  }}
+                >
+                  Allow notifications
+                </Button>
+              ) : (
+                <></>
+              )}
             </Dialog.Actions>
           </Dialog>
         </Portal>

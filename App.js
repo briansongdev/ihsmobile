@@ -1,6 +1,13 @@
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Image, Alert, Linking } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  Alert,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import * as Updates from "expo-updates";
 import {
@@ -10,6 +17,8 @@ import {
   Dialog,
   Paragraph,
   ActivityIndicator,
+  Modal,
+  Card,
 } from "react-native-paper";
 import {
   MD3LightTheme as DefaultTheme,
@@ -24,15 +33,16 @@ import OnlineHomePage from "./components/OnlineHomePage.js";
 import ProposeClub from "./components/ProposeClub.js";
 import AddBookmark from "./components/AddBookmark.js";
 import { LogBox } from "react-native";
+import PrivacyPolicy from "./components/PrivacyPolicy.js";
 
 function Account({ route, navigation }) {
   const { isLocal } = route.params;
-  const [localName, setLocalName] = useState("");
   const [userObj, setUserObj] = useState("");
   const [tempName, setTempName] = useState("");
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState();
   const [visible, setVisible] = useState(false);
+  const [viewedPP, setPP] = useState(false);
   const INJECTED_JAVASCRIPT = `(
     function() {
       window.ReactNativeWebView.postMessage(document.documentElement.innerHTML);
@@ -75,135 +85,156 @@ function Account({ route, navigation }) {
             backgroundColor: "#e6fef9",
           }}
         >
-          <Text style={{ margin: 10 }}>
-            Welcome. To get started, sign in with your IUSD email (login with
-            Google).{" "}
-            <Text
-              onPress={() => {
-                Linking.openURL("https://ihsmobile.webflow.io");
-              }}
-              style={{ fontWeight: "bold", color: "red" }}
-            >
-              Click here to read on what data this app stores and how your data
-              is privately processed.
-            </Text>{" "}
-            By continuing to sign in, you affirm that you agree to the above.
+          <Text style={{ marginTop: 10, marginLeft: 10, marginRight: 10 }}>
+            Welcome. To get started, read our privacy policy first. Then, sign
+            in with your{" "}
+            <Text style={{ fontWeight: "bold" }}>
+              IUSD email (thru Google).
+            </Text>
           </Text>
+          <Button
+            mode="text"
+            textColor="teal"
+            icon="chevron-right-circle"
+            style={{ margin: 10 }}
+            onPress={() => {
+              setPP(true);
+              navigation.navigate("Privacy Policy");
+            }}
+          >
+            Our Privacy Policy
+          </Button>
         </View>
-        <WebView
-          source={{ uri: "https://my.iusd.org" }}
-          userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-          injectedJavaScript={INJECTED_JAVASCRIPT}
-          onMessage={async (event) => {
-            if (tempName == "") {
-              if (
-                event.nativeEvent.data.match(/"\d\d\d\d\d\d\d\d\d"/) != null
-              ) {
-                if (event.nativeEvent.data.match("Irvine High School")) {
-                  setTempName(
-                    Buffer.from(
-                      event.nativeEvent.data
-                        .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
-                        .split('"')
-                        .join("") +
-                        ":" +
+        {viewedPP ? (
+          <WebView
+            source={{ uri: "https://my.iusd.org" }}
+            userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+            injectedJavaScript={INJECTED_JAVASCRIPT}
+            onMessage={async (event) => {
+              if (tempName == "") {
+                if (
+                  event.nativeEvent.data.match(/"\d\d\d\d\d\d\d\d\d"/) != null
+                ) {
+                  if (event.nativeEvent.data.match("Irvine High School")) {
+                    setTempName(
+                      Buffer.from(
                         event.nativeEvent.data
-                          .match(/"\d\d\d\d\d"/)[0]
+                          .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
+                          .split('"')
+                          .join("") +
+                          ":" +
+                          event.nativeEvent.data
+                            .match(/"\d\d\d\d\d"/)[0]
+                            .split('"')
+                            .join("")
+                      ).toString("base64")
+                    );
+                    let arrayOfNames = event.nativeEvent.data
+                      .match(/2\d.*@IUSD\.org/g)[0]
+                      .split('"')
+                      .join("")
+                      .slice(2)
+                      .slice(0, -9)
+                      .match(/[A-Z][a-z]+/g);
+                    arrayOfNames.push(arrayOfNames.shift());
+                    setFullName(arrayOfNames.join(" "));
+                    let gradeString = event.nativeEvent.data
+                      .match(/- Grd \d* - /g)[0]
+                      .replace(/\D/g, "")
+                      .trim();
+                    setGrade(Number(gradeString));
+                    setUserObj(
+                      Number(
+                        event.nativeEvent.data
+                          .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
                           .split('"')
                           .join("")
-                    ).toString("base64")
-                  );
-                  let arrayOfNames = event.nativeEvent.data
-                    .match(/2\d.*@IUSD\.org/g)[0]
-                    .split('"')
-                    .join("")
-                    .slice(2)
-                    .slice(0, -9)
-                    .match(/[A-Z][a-z]+/g);
-                  arrayOfNames.push(arrayOfNames.shift());
-                  setFullName(arrayOfNames.join(" "));
-                  let gradeString = event.nativeEvent.data
-                    .match(/- Grd \d* - /g)[0]
-                    .replace(/\D/g, "")
-                    .trim();
-                  setGrade(Number(gradeString));
-                  setUserObj(
-                    Number(
-                      event.nativeEvent.data
-                        .match(/"\d\d\d\d\d\d\d\d\d"/)[0]
-                        .split('"')
-                        .join("")
-                    )
-                  );
-                } else {
-                  alert("You are not a part of Irvine High School.");
-                  navigation.navigate("Home");
-                }
-              }
-            } else {
-              if (tempName != "") {
-                let result;
-                try {
-                  setVisible(true);
-                  result = JSON.parse(JSON.parse(event.nativeEvent.data));
-                  let newClassObject = [];
-                  for (let i = 0; i < result.length; i++) {
-                    newClassObject.push({
-                      RoomNumber: result[i].RoomNumber,
-                      CourseName: result[i].CourseName,
-                      CurrentMarkAndScore: result[i].CurrentMarkAndScore,
-                      LastUpdated: result[i].LastUpdated,
-                      NumMissingAssignments: result[i].NumMissingAssignments,
-                      PeriodTitle: result[i].PeriodTitle,
-                    });
-                  }
-                  await SecureStore.setItemAsync(
-                    "classes",
-                    JSON.stringify(newClassObject)
-                  );
-                  setTimeout(async () => {
-                    await axios
-                      .post(
-                        "https://ihsbackend.vercel.app/api/accounts/account",
-                        {
-                          studentID: userObj,
-                          name: fullName,
-                          currentGrade: grade,
-                          bearer: tempName,
-                          barcode: "https://barcodeapi.org/api/39/" + userObj,
-                        }
                       )
-                      .then(async (res) => {
-                        if (!res.data.success) {
-                          alert("Error: " + res.data.message);
-                          navigation.navigate("Home");
-                        } else {
-                          await SecureStore.setItemAsync("isLocal", "false");
-                          await SecureStore.setItemAsync("bearer", tempName);
-                          await SecureStore.setItemAsync(
-                            "notifications",
-                            "false"
-                          );
-                          await SecureStore.setItemAsync(
-                            "gradesShowed",
-                            "true"
-                          );
-                        }
-                      });
-                  }, 1000);
-                } catch (e) {
-                  alert(
-                    "Error. Go back to the home screen and try loading this page again."
-                  );
+                    );
+                  } else {
+                    alert("You are not a part of Irvine High School.");
+                    navigation.navigate("Home");
+                  }
                 }
               } else {
-                alert(
-                  "Error. You have logged in using a non-IUSD email (your parents' account?). Reload the app and try again."
-                );
+                if (tempName != "") {
+                  let result;
+                  try {
+                    setVisible(true);
+                    result = JSON.parse(JSON.parse(event.nativeEvent.data));
+                    let newClassObject = [];
+                    for (let i = 0; i < result.length; i++) {
+                      newClassObject.push({
+                        RoomNumber: result[i].RoomNumber,
+                        CourseName: result[i].CourseName,
+                        CurrentMarkAndScore: result[i].CurrentMarkAndScore,
+                        LastUpdated: result[i].LastUpdated,
+                        NumMissingAssignments: result[i].NumMissingAssignments,
+                        PeriodTitle: result[i].PeriodTitle,
+                      });
+                    }
+                    await SecureStore.setItemAsync(
+                      "classes",
+                      JSON.stringify(newClassObject)
+                    );
+                    setTimeout(async () => {
+                      await axios
+                        .post(
+                          "https://ihsbackend.vercel.app/api/accounts/account",
+                          {
+                            studentID: "",
+                            name: fullName,
+                            currentGrade: grade,
+                            bearer: tempName,
+                            barcode: "",
+                          }
+                        )
+                        .then(async (res) => {
+                          if (!res.data.success) {
+                            alert("Error: " + res.data.message);
+                            navigation.navigate("Home");
+                          } else {
+                            await SecureStore.setItemAsync("isLocal", "false");
+                            await SecureStore.setItemAsync("bearer", tempName);
+                            await SecureStore.setItemAsync(
+                              "notifications",
+                              "false"
+                            );
+                            await SecureStore.setItemAsync(
+                              "gradesShowed",
+                              "true"
+                            );
+                            await SecureStore.setItemAsync("uid", userObj);
+                          }
+                        });
+                    }, 1000);
+                  } catch (e) {
+                    alert(
+                      "Error. Go back to the home screen and try loading this page again."
+                    );
+                  }
+                } else {
+                  alert(
+                    "Error. You have logged in using a non-IUSD email (your parents' account?). Reload the app and try again."
+                  );
+                }
               }
-            }
-          }}
-        />
+            }}
+          />
+        ) : (
+          <View style={styles.container}>
+            <Card style={{ margin: 15, borderRadius: 15 }}>
+              <Card.Content>
+                <Paragraph>
+                  Please review the Privacy Policy (above) and return to this
+                  screen when you have finished reading. By continuing to sign
+                  in, you affirm that you agree to our Privacy Policy.{" "}
+                  <Text style={{ fontWeight: "bold" }}>Thank you.</Text>
+                </Paragraph>
+              </Card.Content>
+            </Card>
+          </View>
+        )}
       </>
     );
   }
@@ -258,15 +289,6 @@ function Landing({ navigation }) {
         }
       >
         Sign in with Aeries
-      </Button>
-      <Button
-        mode="text"
-        onPress={() => {
-          showConfirmDialog();
-        }}
-        disabled={true}
-      >
-        Set up a local account (coming soon)
       </Button>
     </View>
   );
@@ -329,20 +351,32 @@ export default function App() {
               <Stack.Navigator>
                 {!isSignedIn ? (
                   <>
-                    <Stack.Screen
-                      name="Home"
-                      options={{
-                        headerShown: false,
-                      }}
-                      component={Landing}
-                    />
-                    <Stack.Screen
-                      name="Account"
-                      options={{
-                        animation: "fade_from_bottom",
-                      }}
-                      component={Account}
-                    />
+                    <Stack.Group>
+                      <Stack.Screen
+                        name="Home"
+                        options={{
+                          headerShown: false,
+                        }}
+                        component={Landing}
+                      />
+                      <Stack.Screen
+                        name="Account"
+                        options={{
+                          animation: "fade_from_bottom",
+                        }}
+                        component={Account}
+                      />
+                    </Stack.Group>
+                    <Stack.Group screenOptions={{ presentation: "modal" }}>
+                      <Stack.Screen
+                        name="Privacy Policy"
+                        options={{
+                          headerLargeTitle: true,
+                          headerShadowVisible: false,
+                        }}
+                        component={PrivacyPolicy}
+                      />
+                    </Stack.Group>
                   </>
                 ) : (
                   <>

@@ -47,6 +47,7 @@ function HomeScreen({ navigation }) {
   const [grade, setGrade] = useState();
   const [relevantURI, setURI] = useState("");
   const [firstLoad, setFirstLoad] = useState(true);
+  const [uid, setUID] = useState("");
   const INJECTED_JAVASCRIPT = `(
     function() {
       window.ReactNativeWebView.postMessage(document.documentElement.innerHTML);
@@ -80,7 +81,10 @@ function HomeScreen({ navigation }) {
                   Number(a) - Number(b)
               );
               setAccount(newRes);
-              setURI(res.data.account.barcode);
+              setURI(
+                "https://barcodeapi.org/api/39/" +
+                  (await SecureStore.getItemAsync("uid"))
+              );
             } else {
               await SecureStore.deleteItemAsync("isLocal");
               await SecureStore.deleteItemAsync("bearer");
@@ -97,6 +101,7 @@ function HomeScreen({ navigation }) {
             );
           });
         const bearr = await SecureStore.getItemAsync("bearer");
+        setUID(await SecureStore.getItemAsync("uid"));
         if (firstLoad) {
           if ((await SecureStore.getItemAsync("gradesShowed")) == "true")
             switchGradesShowed(true);
@@ -280,11 +285,11 @@ function HomeScreen({ navigation }) {
                         .post(
                           "https://ihsbackend.vercel.app/api/accounts/account",
                           {
-                            studentID: userObj,
+                            studentID: "",
                             name: fullName,
                             currentGrade: grade,
                             bearer: tempName,
-                            barcode: "https://barcodeapi.org/api/39/" + userObj,
+                            barcode: "",
                           }
                         )
                         .then(async (res) => {
@@ -336,7 +341,7 @@ function HomeScreen({ navigation }) {
 
                 <Text>
                   <Text style={{ fontWeight: "bold" }}>{"\n"}Personal ID:</Text>{" "}
-                  {account.uid} {"\n"}
+                  {uid} {"\n"}
                   <Text style={{ fontWeight: "bold" }}>ID Card:</Text>
                 </Text>
 

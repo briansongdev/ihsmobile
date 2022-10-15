@@ -16,6 +16,7 @@ export default function PrivacyPolicy({ navigation }) {
             mode="text"
             textColor="teal"
             icon="chevron-left-circle"
+            style={{ margin: 5 }}
             onPress={() => navigation.goBack()}
           >
             Return
@@ -25,7 +26,7 @@ export default function PrivacyPolicy({ navigation }) {
             style={{
               flex: 0,
               height: Dimensions.get("window").height - 250,
-              width: Dimensions.get("window").width,
+              width: Dimensions.get("window").width - 30,
             }}
             userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
             source={{
@@ -49,6 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
+    padding: 15,
   },
   tinyLogo: {
     width: 338.7 / 2,

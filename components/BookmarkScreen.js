@@ -30,10 +30,64 @@ export default function ClubScreen({ navigation }) {
   const [shoot, setShoot] = useState(false);
   const [loading, setLoading] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
+  const [bgColor, setBGColor] = useState("");
+  useEffect(() => {
+    const hi = async () =>
+      setBGColor(await SecureStore.getItemAsync("bgColor"));
+    hi();
+  }, []);
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: bgColor,
+    },
+    previewContainer: {
+      backgroundColor: "#e1e1e1",
+      borderRadius: 15,
+      overflow: "hidden",
+      maxWidth: 350,
+      marginTop: 20,
+    },
+    previewImage: {
+      width: 350,
+      height: 200,
+      backgroundColor: "#d5d5d5",
+    },
+    previewTitle: {
+      fontWeight: "700",
+      padding: 10,
+      paddingTop: 10,
+      fontSize: 15,
+    },
+    previewDescription: {
+      paddingHorizontal: 10,
+      paddingTop: 0,
+      paddingBottom: 20,
+    },
+    previewUrl: {
+      paddingHorizontal: 10,
+      paddingTop: 5,
+      paddingBottom: 10,
+      paddingRight: 40,
+      color: "#777",
+      fontWeight: "300",
+    },
+    topContainer: {
+      flex: 1,
+      backgroundColor: bgColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tinyLogo: {
+      width: 338.7 / 2,
+      height: 142.5 / 2,
+    },
+  });
 
   useFocusEffect(
     useCallback(() => {
       const fetchUser = async () => {
+        setBGColor(await SecureStore.getItemAsync("bgColor"));
         await axios
           .get("https://ihsbackend.vercel.app/api/accounts/account", {
             headers: {
@@ -259,51 +313,3 @@ export default function ClubScreen({ navigation }) {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-  },
-  previewContainer: {
-    backgroundColor: "#e1e1e1",
-    borderRadius: 15,
-    overflow: "hidden",
-    maxWidth: 350,
-    marginTop: 20,
-  },
-  previewImage: {
-    width: 350,
-    height: 200,
-    backgroundColor: "#d5d5d5",
-  },
-  previewTitle: {
-    fontWeight: "700",
-    padding: 10,
-    paddingTop: 10,
-    fontSize: 15,
-  },
-  previewDescription: {
-    paddingHorizontal: 10,
-    paddingTop: 0,
-    paddingBottom: 20,
-  },
-  previewUrl: {
-    paddingHorizontal: 10,
-    paddingTop: 5,
-    paddingBottom: 10,
-    paddingRight: 40,
-    color: "#777",
-    fontWeight: "300",
-  },
-  topContainer: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tinyLogo: {
-    width: 338.7 / 2,
-    height: 142.5 / 2,
-  },
-});

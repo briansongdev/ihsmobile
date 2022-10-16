@@ -30,16 +30,14 @@ import Hyperlink from "react-native-hyperlink";
 export default function ClubScreen({ navigation }) {
   const [clubs, setClubs] = useState([]);
   const [favoritedClubs, setFavoritedClubs] = useState([]);
-  const [visible, setVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
-  const [clubObject, setClubObj] = useState({
-    clubName: "",
-    description: "",
-    registerLink: "",
-    clubMeetingRoom: "",
-    members: 0,
-  });
-
+  const [bgColor, setBGColor] = useState("");
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const hi = async () =>
+      setBGColor(await SecureStore.getItemAsync("bgColor"));
+    hi();
+  }, []);
   useEffect(() => {
     async function fetchClubs() {
       await axios
@@ -80,11 +78,28 @@ export default function ClubScreen({ navigation }) {
       });
     }
     fetchClubs();
-  }, [favoritedClubs]);
+  }, []);
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: bgColor,
+    },
+    topContainer: {
+      flex: 1,
+      backgroundColor: bgColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tinyLogo: {
+      width: 338.7 / 2,
+      height: 142.5 / 2,
+    },
+  });
 
   useFocusEffect(
     useCallback(() => {
       const fetchUser = async () => {
+        setBGColor(await SecureStore.getItemAsync("bgColor"));
         await axios
           .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
           .then((res) => {
@@ -111,6 +126,16 @@ export default function ClubScreen({ navigation }) {
               "We have run into an error. Please force-quit the app and restart."
             );
           });
+        navigation.setOptions({
+          headerLeft: () => (
+            <IconButton
+              icon="information-outline"
+              iconColor="teal"
+              size={30}
+              onPress={() => setInfoVisible(true)}
+            />
+          ),
+        });
       };
 
       fetchUser();
@@ -119,7 +144,7 @@ export default function ClubScreen({ navigation }) {
     }, [])
   );
 
-  if (!clubs || !favoritedClubs) {
+  if (!clubs) {
     return (
       <View style={styles.topContainer}>
         <ActivityIndicator animating={true} color="green" />
@@ -128,6 +153,20 @@ export default function ClubScreen({ navigation }) {
   } else {
     return (
       <View style={styles.container}>
+        <Portal>
+          <Dialog visible={loading} dismissable={false}>
+            <Dialog.Content>
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator animating={true} color="blue" />
+              </View>
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
         <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
           <Card.Content>
             <Title>President of an existing club?</Title>
@@ -167,7 +206,12 @@ export default function ClubScreen({ navigation }) {
         <ScrollView>
           <View style={{ marginTop: 10, marginBottom: 10 }}>
             <Text
-              style={{ textAlign: "center", fontWeight: "bold" }}
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                margin: 5,
+                color: "teal",
+              }}
               variant="titleLarge"
             >
               Favorited Clubs
@@ -218,11 +262,13 @@ export default function ClubScreen({ navigation }) {
                   </Card>
                 );
               })}
-            <Text style={{ textAlign: "center", margin: 10 }}>
-              ... end of favorited clubs
-            </Text>
             <Text
-              style={{ textAlign: "center", fontWeight: "bold" }}
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                margin: 5,
+                color: "teal",
+              }}
               variant="titleLarge"
             >
               Other Clubs
@@ -263,6 +309,7 @@ export default function ClubScreen({ navigation }) {
                             {...props}
                             icon="heart-outline"
                             onPress={async () => {
+                              setLoading(true);
                               await axios
                                 .post(
                                   "https://ihsbackend.vercel.app/api/accounts/favoriteClub",
@@ -275,7 +322,8 @@ export default function ClubScreen({ navigation }) {
                                 )
                                 .then((res) => {
                                   if (res.data.success) {
-                                    setFavoritedClubs(res.data.clubs);
+                                    setFavoritedClubs(res.data.favoritedClubs);
+                                    setLoading(false);
                                   } else {
                                     alert(res.data.message);
                                   }
@@ -303,29 +351,9 @@ export default function ClubScreen({ navigation }) {
                   );
                 }
               })}
-            <Text style={{ textAlign: "center", margin: 10 }}>
-              ... end of other clubs
-            </Text>
           </View>
         </ScrollView>
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-  },
-  topContainer: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tinyLogo: {
-    width: 338.7 / 2,
-    height: 142.5 / 2,
-  },
-});

@@ -5,7 +5,10 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
+  TouchableOpacity,
+  Animated,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
@@ -25,14 +28,14 @@ import {
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { IMPORTEDB64 } from "../importedURI";
+import { IMPORTEDB64, SCHEDULEINTERP } from "../importedURI";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import greetingTime from "greeting-time";
 import CalendarScreen from "./CalendarScreen.js";
 import ChatScreen from "./BookmarkScreen.js";
 import LocationScreen from "./FlexTimeScreen.js";
 import ClubScreen from "./ClubScreen.js";
-import * as LocalAuthentication from "expo-local-authentication";
+import InteractiveTextInput from "react-native-text-input-interactive";
 
 function HomeScreen({ navigation }) {
   const [account, setAccount] = useState({});
@@ -48,6 +51,8 @@ function HomeScreen({ navigation }) {
   const [relevantURI, setURI] = useState("");
   const [firstLoad, setFirstLoad] = useState(true);
   const [uid, setUID] = useState("");
+  const [time, setTime] = useState(new Date().getMinutes());
+  const [trueName, setTrueName] = useState("");
   const INJECTED_JAVASCRIPT = `(
     function() {
       window.ReactNativeWebView.postMessage(document.documentElement.innerHTML);
@@ -61,6 +66,70 @@ function HomeScreen({ navigation }) {
         });
         open.apply(this, arguments);
     };})();`;
+  const colors = [
+    "#e6fef9",
+    "#ffffff",
+    "#ffe6ee",
+    "#e5f6df",
+    "#cae9f5",
+    "#e6d1f2",
+  ];
+
+  const ColorCard = ({ color, onPress }) => {
+    return (
+      <TouchableOpacity
+        style={{
+          width: "33%",
+          height: 150,
+          padding: 5,
+        }}
+        onPress={async () => {
+          await SecureStore.setItemAsync("bgColor", color);
+          setBGColor(color);
+          navigation.setOptions({ headerStyle: { backgroundColor: color } });
+          setIDvisible(false);
+        }}
+      >
+        <View
+          style={{
+            padding: 5,
+            backgroundColor: "#FFF",
+            borderRadius: 15,
+            height: "100%",
+          }}
+        >
+          <Animated.View
+            style={{
+              backgroundColor: color,
+              padding: 10,
+              borderRadius: 10,
+              flex: 1,
+            }}
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const [bgColor, setBGColor] = useState("");
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: bgColor,
+    },
+    topContainer: {
+      flex: 1,
+      backgroundColor: bgColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tinyLogo: {
+      width: 338.7 / 3,
+      height: 142.5 / 3,
+      marginBottom: 10,
+    },
+  });
 
   useEffect(() => {
     const hi = async () => {
@@ -86,10 +155,8 @@ function HomeScreen({ navigation }) {
                   (await SecureStore.getItemAsync("uid")) +
                   "&code=Code39"
               );
+              setTrueName(await SecureStore.getItemAsync("trueName"));
             } else {
-              await SecureStore.deleteItemAsync("isLocal");
-              await SecureStore.deleteItemAsync("bearer");
-              await SecureStore.deleteItemAsync("classes");
               console.log(res.data.message);
             }
           })
@@ -134,20 +201,11 @@ function HomeScreen({ navigation }) {
       navigation.setOptions({
         headerLeft: () => (
           <IconButton
-            icon="card-account-details-outline"
+            icon="palette-outline"
             iconColor="teal"
             size={30}
             onPress={async () => {
-              if (
-                (
-                  await LocalAuthentication.authenticateAsync({
-                    promptMessage:
-                      "Authentication is required for you to conveniently and privately access sensitive information.",
-                  })
-                ).success == true
-              ) {
-                setIDvisible(true);
-              }
+              setIDvisible(true);
             }}
           />
         ),
@@ -186,7 +244,12 @@ function HomeScreen({ navigation }) {
       });
     };
     hi();
-  }, [account, calendar, areGradesShowed, tempName]);
+  }, [areGradesShowed, tempName, refreshVisible]);
+  useEffect(() => {
+    const hi = async () =>
+      setBGColor(await SecureStore.getItemAsync("bgColor"));
+    hi();
+  }, []);
   if (Object.keys(account).length == 0 || calendar.length == 0) {
     return (
       <View style={styles.topContainer}>
@@ -335,37 +398,49 @@ function HomeScreen({ navigation }) {
             <Dialog visible={idVisible} dismissable={false}>
               <Dialog.Title>
                 <Text style={{ fontWeight: "bold" }} variant="displayMedium">
-                  {account.name}
+                  Personalization
                 </Text>
               </Dialog.Title>
               <Dialog.Content>
-                <Text variant="headlineMedium" style={{ marginTop: -20 }}>
-                  Grade {account.currentGrade}
-                </Text>
-
-                <Text>
-                  <Text style={{ fontWeight: "bold" }}>{"\n"}Personal ID:</Text>{" "}
-                  {uid} {"\n"}
-                  <Text style={{ fontWeight: "bold" }}>ID Card:</Text>
-                </Text>
-                <View style={{ alignItems: "center" }}>
-                  <Image
-                    style={{ height: 100, width: 350, margin: 10 }}
-                    source={{
-                      uri: relevantURI,
-                    }}
-                  />
-                  <Paragraph>
-                    Please note, the QR code is only another form of
-                    identification, and it cannot be scanned with a physical
-                    scanner (i.e. for flextime check-ins).
-                  </Paragraph>
-                </View>
+                <KeyboardAvoidingView behavior="padding">
+                  <ScrollView keyboardShouldPersistTaps="handled">
+                    <InteractiveTextInput
+                      placeholder="Set preferred first name here (if different from legal name)"
+                      autoComplete="none"
+                      autoCorrect="none"
+                      onChangeText={async (e) => {
+                        setTrueName(e.split(" ")[0].substring(0, 12));
+                        await SecureStore.setItemAsync(
+                          "trueName",
+                          e.split(" ")[0].substring(0, 12)
+                        );
+                      }}
+                      value={trueName}
+                      textInputStyle={{ width: "90%", margin: 10 }}
+                    ></InteractiveTextInput>
+                    <Paragraph>
+                      Choose a nice background for yourself. More colors may be
+                      added in the future.
+                    </Paragraph>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {colors.map((color, index) => {
+                        return <ColorCard key={index} color={color} />;
+                      })}
+                    </View>
+                  </ScrollView>
+                </KeyboardAvoidingView>
               </Dialog.Content>
               <Dialog.Actions>
                 <Button
-                  textColor="green"
+                  textColor="teal"
                   onPress={async () => {
+                    if (trueName != account.name)
+                      await SecureStore.setItemAsync("trueName", trueName);
                     setIDvisible(false);
                   }}
                 >
@@ -374,15 +449,15 @@ function HomeScreen({ navigation }) {
               </Dialog.Actions>
             </Dialog>
           </Portal>
-          <SafeAreaView style={{ flex: 1, backgroundColor: "#e6fef9" }}>
-            <View style={{ backgroundColor: "#e6fef9" }}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+            <View style={{ backgroundColor: bgColor }}>
               <Text
                 style={{ marginLeft: 10, textAlign: "center" }}
                 variant="displaySmall"
               >
                 {greetingTime(new Date())},{" "}
                 <Text style={{ fontWeight: "bold" }}>
-                  {account.name.split(" ")[0]}
+                  {trueName.split(" ")[0]}
                 </Text>
                 !
               </Text>
@@ -400,12 +475,20 @@ function HomeScreen({ navigation }) {
                     month: "long",
                     day: "numeric",
                     year: "numeric",
-                  })}
+                  })}{" "}
+                  //{" "}
+                  {
+                    SCHEDULEINTERP[
+                      calendar[new Date().getMonth() - 8][
+                        new Date().getDate() - 1
+                      ]
+                    ]
+                  }
                 </Text>
               </Text>
               <Text
                 variant="headlineLarge"
-                style={{ color: "teal", marginLeft: "5%" }}
+                style={{ color: "teal", marginLeft: "5%", marginBottom: 10 }}
               >
                 Coming up...
               </Text>
@@ -435,9 +518,9 @@ function HomeScreen({ navigation }) {
                             </Title>
                             <Paragraph>
                               Enjoy your day off!{"\n\n"}(Make sure to check the
-                              website for "special" days, like PSAT testing and
-                              the finals schedule. These may not accurately
-                              reflect in your IHS Mobile schedule.)
+                              IHS website for "special" days, like PSAT testing
+                              and the finals schedule. These may not accurately
+                              reflect in your schedule.)
                             </Paragraph>
                           </Card.Content>
                         </Card>
@@ -782,7 +865,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -866,7 +948,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -1028,7 +1109,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -1109,8 +1189,10 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
-                    const hr = new Date().getHours(),
-                      min = new Date().getMinutes();
+                    // const hr = new Date().getHours(),
+                    //   min = new Date().getMinutes();
+                    const hr = 4,
+                      min = 5;
                     const chokepoints = [
                       [10, 25],
                       [0, 0],
@@ -1188,7 +1270,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Flex Time -{" "}
@@ -1221,7 +1302,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -1305,7 +1385,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -1464,7 +1543,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Flex Time -{" "}
@@ -1497,7 +1575,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -1581,7 +1658,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -1740,7 +1816,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Advisement -{" "}
@@ -1772,7 +1847,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -1856,7 +1930,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -2016,7 +2089,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Advisement -{" "}
@@ -2048,7 +2120,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -2132,7 +2203,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -2292,7 +2362,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -2376,7 +2445,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -2535,7 +2603,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -2619,7 +2686,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Lunch -{" "}
@@ -2783,7 +2849,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -2947,7 +3012,6 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
-                                      fontSize: 16,
                                     }}
                                   >
                                     Break -{" "}
@@ -3018,12 +3082,31 @@ function HomeScreen({ navigation }) {
                   }
                 }
               })}
+              <Card
+                style={{
+                  marginLeft: 15,
+                  marginRight: 15,
+                  marginTop: 10,
+                  marginBottom: 10,
+                  borderRadius: 10,
+                }}
+              >
+                <Card.Content>
+                  <Title style={{ fontWeight: "bold", color: "teal" }}>
+                    End of day!
+                  </Title>
+                  <Paragraph>
+                    Take a rest...you've earned it! See you tomorrow.
+                  </Paragraph>
+                </Card.Content>
+              </Card>
               <View
                 style={{
                   flexDirection: "row",
                   justifyContent: "begin",
                   marginLeft: "5%",
                   marginTop: 10,
+                  marginBottom: 50,
                 }}
               >
                 <Switch
@@ -3079,6 +3162,30 @@ function HomeScreen({ navigation }) {
 const Tab = createBottomTabNavigator();
 
 export default function OnlineHomePage({ navigation }) {
+  const [bgColor, setBGColor] = useState("");
+  useEffect(() => {
+    const hi = async () =>
+      setBGColor(await SecureStore.getItemAsync("bgColor"));
+    hi();
+  }, []);
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: bgColor,
+    },
+    topContainer: {
+      flex: 1,
+      backgroundColor: bgColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tinyLogo: {
+      width: 338.7 / 3,
+      height: 142.5 / 3,
+      marginBottom: 10,
+    },
+  });
+
   return (
     <>
       <Tab.Navigator
@@ -3108,7 +3215,6 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
-            lazy: false,
           }}
           component={ClubScreen}
         />
@@ -3123,7 +3229,6 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
-            lazy: false,
           }}
           component={CalendarScreen}
         />
@@ -3139,7 +3244,7 @@ export default function OnlineHomePage({ navigation }) {
             ),
             headerShadowVisible: false,
             headerStyle: {
-              backgroundColor: "#e6fef9",
+              backgroundColor: bgColor,
             },
             tabBarShowLabel: false,
             tabBarIcon: ({ color, size }) => (
@@ -3161,7 +3266,6 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
-            lazy: false,
           }}
           component={LocationScreen}
         />
@@ -3176,7 +3280,6 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
-            lazy: false,
           }}
           component={ChatScreen}
         />
@@ -3184,21 +3287,3 @@ export default function OnlineHomePage({ navigation }) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-  },
-  topContainer: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tinyLogo: {
-    width: 338.7 / 3,
-    height: 142.5 / 3,
-    marginBottom: 10,
-  },
-});

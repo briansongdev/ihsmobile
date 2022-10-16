@@ -30,6 +30,7 @@
     "expo-updates": "^0.14.6",
     "greeting-time": "^1.0.0",
     "react": "18.0.0",
+    "react-color": "^2.19.3",
     "react-linkify": "^1.0.0-alpha",
     "react-native": "0.69.6",
     "react-native-barcode-builder": "^2.0.0",

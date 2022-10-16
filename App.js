@@ -201,6 +201,10 @@ function Account({ route, navigation }) {
                               "false"
                             );
                             await SecureStore.setItemAsync(
+                              "trueName",
+                              fullName.split(" ")[0]
+                            );
+                            await SecureStore.setItemAsync(
                               "gradesShowed",
                               "true"
                             );

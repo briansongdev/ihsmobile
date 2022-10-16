@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import * as Notifications from "expo-notifications";
 import {
   StyleSheet,
@@ -25,6 +25,7 @@ import { Calendar } from "react-native-calendars";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import ConfettiCannon from "react-native-confetti-cannon";
 import * as Device from "expo-device";
+import { useFocusEffect } from "@react-navigation/native";
 
 const workout = { key: "workout", color: "green" };
 const vacation = { key: "vacation", color: "red", selectedDotColor: "blue" };
@@ -95,6 +96,12 @@ export default function CalendarScreen({ navigation }) {
     eventTitle: "",
     description: "",
   });
+  const [bgColor, setBGColor] = useState("");
+  useEffect(() => {
+    const hi = async () =>
+      setBGColor(await SecureStore.getItemAsync("bgColor"));
+    hi();
+  }, []);
   useEffect(() => {
     // This listener is fired whenever a notification is received while the app is foregrounded
     notificationListener.current =
@@ -230,7 +237,36 @@ export default function CalendarScreen({ navigation }) {
       }
     };
     hi();
-  }, [currSelectedDate, bell, visible]);
+  }, [schedule, currSelectedDate, bell, visible]);
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: bgColor,
+    },
+    topContainer: {
+      flex: 1,
+      backgroundColor: bgColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tinyLogo: {
+      width: 338.7 / 2,
+      height: 142.5 / 2,
+    },
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUser = async () => {
+        setBGColor(await SecureStore.getItemAsync("bgColor"));
+      };
+
+      fetchUser();
+
+      return () => {};
+    }, [])
+  );
+
   if (!schedule) {
     return (
       <View style={styles.topContainer}>
@@ -517,7 +553,10 @@ export default function CalendarScreen({ navigation }) {
             enableSwipeMonths={true}
           />
           <View style={{ alignItems: "center" }}>
-            <Text variant="headlineLarge" style={{ marginBottom: 10 }}>
+            <Text
+              variant="headlineLarge"
+              style={{ marginBottom: 10, color: "teal", fontWeight: "bold" }}
+            >
               {new Date(
                 new Date(currSelectedDate).setHours(
                   new Date(currSelectedDate).getHours() + 7
@@ -537,9 +576,7 @@ export default function CalendarScreen({ navigation }) {
                 time2.setHours(time2.getHours() + 7);
                 if (
                   time1.getDate() === time2.getDate() &&
-                  Math.abs(
-                    Date.parse(d.datetime) - Date.parse(currSelectedDate)
-                  ) <
+                  Math.abs(Date.parse(time1) - Date.parse(time2)) <
                     24 * 60 * 60 * 1000
                 ) {
                   if (!d.active) {
@@ -832,20 +869,3 @@ export default function CalendarScreen({ navigation }) {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-  },
-  topContainer: {
-    flex: 1,
-    backgroundColor: "#e6fef9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tinyLogo: {
-    width: 338.7 / 2,
-    height: 142.5 / 2,
-  },
-});

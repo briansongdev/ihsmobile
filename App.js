@@ -236,9 +236,9 @@ function Account({ route, navigation }) {
                   to best serve you as the end user. These include:
                   {"\n"}- Your name{"\n"}- An encrypted, personally-identifiable
                   bearer token (to authorize your requests){"\n"}- Your grade
-                  level{"\n"}- Any schedule or bookmarks you create within our
-                  app (required for push notifications to work, and allows you
-                  to access this data from any device){"\n\n"}
+                  level{"\n"}- Any scheduling events or bookmarks you create
+                  within our app (required for push notifications to work, and
+                  allows you to access this data from any device){"\n\n"}
                   <Text style={{ fontWeight: "bold" }}>
                     To get started, read our privacy policy first.
                   </Text>{" "}

@@ -171,7 +171,7 @@ export default function ClubScreen({ navigation }) {
   if (!bmarks) {
     return (
       <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="green" />
+        <ActivityIndicator animating={true} color="teal" />
       </View>
     );
   } else {
@@ -204,7 +204,7 @@ export default function ClubScreen({ navigation }) {
                   justifyContent: "center",
                 }}
               >
-                <ActivityIndicator animating={true} color="blue" />
+                <ActivityIndicator animating={true} color="teal" />
               </View>
             </Dialog.Content>
           </Dialog>

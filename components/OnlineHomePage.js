@@ -13,6 +13,7 @@ import {
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
 import * as Haptics from "expo-haptics";
+import { VibrantLinearGradient, VibrantLinearGradient2 } from "./GradientText";
 import {
   IconButton,
   Text,
@@ -36,6 +37,7 @@ import ChatScreen from "./BookmarkScreen.js";
 import LocationScreen from "./FlexTimeScreen.js";
 import ClubScreen from "./ClubScreen.js";
 import InteractiveTextInput from "react-native-text-input-interactive";
+import { LinearGradient } from "expo-linear-gradient";
 
 function HomeScreen({ navigation }) {
   const [account, setAccount] = useState({});
@@ -133,6 +135,9 @@ function HomeScreen({ navigation }) {
 
   useEffect(() => {
     const hi = async () => {
+      if ((await SecureStore.getItemAsync("newUser")) == "true") {
+        navigation.navigate("Welcome, Vaquero.");
+      }
       if (Object.keys(account).length == 0 || calendar.length == 0) {
         await axios
           .get("https://ihsbackend.vercel.app/api/accounts/account", {
@@ -253,7 +258,7 @@ function HomeScreen({ navigation }) {
   if (Object.keys(account).length == 0 || calendar.length == 0) {
     return (
       <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="green" />
+        <ActivityIndicator animating={true} color="teal" />
       </View>
     );
   } else {
@@ -268,7 +273,7 @@ function HomeScreen({ navigation }) {
                 <View
                   style={{ alignItems: "center", justifyContent: "center" }}
                 >
-                  <ActivityIndicator animating={true} color="green" />
+                  <ActivityIndicator animating={true} color="teal" />
                 </View>
               </Dialog.Content>
             </Dialog>
@@ -451,16 +456,28 @@ function HomeScreen({ navigation }) {
           </Portal>
           <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
             <View style={{ backgroundColor: bgColor }}>
-              <Text
-                style={{ marginLeft: 10, textAlign: "center" }}
-                variant="displaySmall"
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
               >
-                {greetingTime(new Date())},{" "}
-                <Text style={{ fontWeight: "bold" }}>
-                  {trueName.split(" ")[0]}
+                <Text
+                  style={{
+                    marginLeft: 10,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                  variant="displaySmall"
+                >
+                  {greetingTime(new Date())},
                 </Text>
-                !
-              </Text>
+                <VibrantLinearGradient variant="displaySmall">
+                  {" "}
+                  {trueName.split(" ")[0]}!
+                </VibrantLinearGradient>
+              </View>
               <Text
                 style={{
                   marginLeft: 10,
@@ -486,12 +503,9 @@ function HomeScreen({ navigation }) {
                   }
                 </Text>
               </Text>
-              <Text
-                variant="headlineLarge"
-                style={{ color: "teal", marginLeft: "5%", marginBottom: 10 }}
-              >
+              <VibrantLinearGradient2 variant="displaySmall">
                 Coming up...
-              </Text>
+              </VibrantLinearGradient2>
             </View>
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
@@ -1189,8 +1203,10 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
-                    const hr = new Date().getHours(),
-                      min = new Date().getMinutes();
+                    // const hr = new Date().getHours(),
+                    //   min = new Date().getMinutes();
+                    const hr = 4,
+                      min = 30;
                     const chokepoints = [
                       [10, 25],
                       [0, 0],
@@ -3213,6 +3229,7 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
+            lazy: false,
           }}
           component={ClubScreen}
         />
@@ -3227,6 +3244,7 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
+            lazy: false,
           }}
           component={CalendarScreen}
         />
@@ -3278,6 +3296,7 @@ export default function OnlineHomePage({ navigation }) {
                 size={size}
               />
             ),
+            lazy: false,
           }}
           component={ChatScreen}
         />

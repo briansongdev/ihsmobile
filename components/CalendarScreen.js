@@ -270,7 +270,7 @@ export default function CalendarScreen({ navigation }) {
   if (!schedule) {
     return (
       <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="green" />
+        <ActivityIndicator animating={true} color="teal" />
       </View>
     );
   } else {
@@ -508,7 +508,7 @@ export default function CalendarScreen({ navigation }) {
                   justifyContent: "center",
                 }}
               >
-                <ActivityIndicator animating={true} color="blue" />
+                <ActivityIndicator animating={true} color="teal" />
               </View>
             </Dialog.Content>
           </Dialog>
@@ -852,7 +852,7 @@ export default function CalendarScreen({ navigation }) {
               <Text style={{ fontWeight: "bold" }}>
                 {!notisOn
                   ? "For a better experience, turn on notifications."
-                  : ""}
+                  : "Notifications are on."}
               </Text>
             </View>
           </ScrollView>

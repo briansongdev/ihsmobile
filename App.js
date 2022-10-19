@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   Dimensions,
+  ImageBackground,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import * as Updates from "expo-updates";
@@ -34,6 +35,10 @@ import ProposeClub from "./components/ProposeClub.js";
 import AddBookmark from "./components/AddBookmark.js";
 import { LogBox } from "react-native";
 import PrivacyPolicy from "./components/PrivacyPolicy.js";
+import WelcomeGuide from "./components/WelcomeGuide.js";
+import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { TextLinearGradient } from "./components/GradientText.js";
 
 function Account({ route, navigation }) {
   const { isLocal } = route.params;
@@ -64,7 +69,8 @@ function Account({ route, navigation }) {
             <Dialog.Title>Loading...</Dialog.Title>
             <Dialog.Content style={{ height: 300 }}>
               <Paragraph>
-                Please wait. We're customizing the perfect experience for you!
+                Please wait. We're loading in your classes! You'll be redirected
+                in a moment.
               </Paragraph>
               <View
                 style={{
@@ -73,7 +79,7 @@ function Account({ route, navigation }) {
                   marginTop: 100,
                 }}
               >
-                <ActivityIndicator animating={true} color="green" />
+                <ActivityIndicator animating={true} color="teal" />
               </View>
             </Dialog.Content>
           </Dialog>
@@ -87,7 +93,7 @@ function Account({ route, navigation }) {
         >
           {viewedPP ? (
             <>
-              <Text style={{ margin: 10, fontSize: 18, color: "red" }}>
+              <Text style={{ margin: 10, fontSize: 16, color: "teal" }}>
                 Please login with your{" "}
                 <Text style={{ fontWeight: "bold", color: "red" }}>
                   IUSD email (thru Google).
@@ -206,9 +212,10 @@ function Account({ route, navigation }) {
                             );
                             await SecureStore.setItemAsync(
                               "gradesShowed",
-                              "true"
+                              "false"
                             );
                           }
+                          await SecureStore.setItemAsync("newUser", "true");
                         });
                     }, 1000);
                   } catch (e) {
@@ -232,19 +239,18 @@ function Account({ route, navigation }) {
                   <Text style={{ fontWeight: "bold" }}>
                     Important data notice:{" "}
                   </Text>
-                  We use a private, secure, online server to store certain data
-                  to best serve you as the end user. These include:
-                  {"\n"}- Your name{"\n"}- An encrypted, personally-identifiable
-                  bearer token (to authorize your requests){"\n"}- Your grade
-                  level{"\n"}- Any scheduling events or bookmarks you create
-                  within our app (required for push notifications to work, and
-                  allows you to access this data from any device){"\n\n"}
+                  We use a private and secure server to deliver services to
+                  optimize your experience.
+                  {"\n\nWhat do we store online? \n"}- Your name{"\n"}- An
+                  encrypted means of authorization{"\n"}- Your grade level
+                  {"\n"}- Any scheduling events or bookmarks you create in our
+                  app (for push notifications and remote accessibility)
+                  {"\n\nThese data are only stored LOCALLY, on your phone: \n"}-
+                  Your classes/grades
+                  {"\n"}- Your personal ID number{"\n"}- Other personal data
+                  {"\n\n"}
                   <Text style={{ fontWeight: "bold" }}>
-                    To get started, read our privacy policy first.
-                  </Text>{" "}
-                  <Text style={{ color: "teal" }}>
-                    By continuing to login, you affirm that you agree to our
-                    Privacy Policy.
+                    Read our official privacy policy to continue to login.
                   </Text>
                 </Paragraph>
               </Card.Content>
@@ -253,7 +259,8 @@ function Account({ route, navigation }) {
                 textColor="teal"
                 icon="chevron-right-circle"
                 style={{ margin: 10 }}
-                onPress={() => {
+                onPress={async () => {
+                  await SecureStore.setItemAsync("newUser", "true");
                   setPP(true);
                   navigation.navigate("Privacy Policy");
                 }}
@@ -295,14 +302,9 @@ function Landing({ navigation }) {
           uri: "https://irvinehigh.iusd.org/sites/irvinehigh/files/images/footer2x_0.png",
         }}
       />
-      <Text variant="titleMedium">Welcome to Irvine High Mobile!</Text>
+      <TextLinearGradient>Welcome to IHS Students!</TextLinearGradient>
       <Text variant="titleMedium">
-        {"\n"}With IHS mobile:{"\n"}
-      </Text>
-      <Text variant="bodyMedium">
-        - Check classes and grades{"\n"}- Plan your schedule{"\n"}- Discover IHS
-        clubs{"\n"}- Access important bookmarks{"\n"}- Sign up for flextime
-        easily{"\n\n"}...and so much more!
+        The school, in the palm of your hand.{"\n"}
       </Text>
       <Text variant="titleMedium">{"\n"}Let's get started, Vaqueros.</Text>
       <Button
@@ -368,7 +370,7 @@ export default function App() {
     if (isLoading) {
       return (
         <View style={styles.topContainer}>
-          <ActivityIndicator animating={true} color="green" />
+          <ActivityIndicator animating={true} color="teal" />
         </View>
       );
     } else {
@@ -391,6 +393,7 @@ export default function App() {
                         name="Account"
                         options={{
                           animation: "fade_from_bottom",
+                          headerBackTitle: "",
                         }}
                         component={Account}
                       />
@@ -415,7 +418,11 @@ export default function App() {
                         component={OnlineHomePage}
                       />
                     </Stack.Group>
-                    <Stack.Group screenOptions={{ presentation: "modal" }}>
+                    <Stack.Group
+                      screenOptions={{
+                        presentation: "modal",
+                      }}
+                    >
                       <Stack.Screen
                         name="Add your club"
                         options={{
@@ -423,6 +430,15 @@ export default function App() {
                           headerShadowVisible: false,
                         }}
                         component={ProposeClub}
+                      />
+                      <Stack.Screen
+                        name="Welcome, Vaquero."
+                        options={{
+                          gestureEnabled: "false",
+                          headerLargeTitle: true,
+                          headerShadowVisible: false,
+                        }}
+                        component={WelcomeGuide}
                       />
                       <Stack.Screen
                         name="Add a bookmark"

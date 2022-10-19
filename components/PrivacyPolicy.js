@@ -17,7 +17,12 @@ export default function PrivacyPolicy({ navigation }) {
             textColor="teal"
             icon="chevron-left-circle"
             style={{ margin: 5 }}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              alert(
+                "By continuing to login, you affirm that you have read and agree to this Privacy Policy."
+              );
+              navigation.goBack();
+            }}
           >
             Return and login
           </Button>

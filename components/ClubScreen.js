@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  StyleSheet,
-  View,
-  KeyboardAvoidingView,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   Button,
@@ -12,20 +7,18 @@ import {
   Card,
   Title,
   Paragraph,
-  Searchbar,
   Dialog,
   Portal,
-  TextInput,
-  TouchableWithoutFeedback,
-  Keyboard,
   IconButton,
-  Divider,
   ActivityIndicator,
 } from "react-native-paper";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import Hyperlink from "react-native-hyperlink";
+
+const wait = (timeout) => {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+};
 
 export default function ClubScreen({ navigation }) {
   const [clubs, setClubs] = useState([]);
@@ -33,6 +26,38 @@ export default function ClubScreen({ navigation }) {
   const [infoVisible, setInfoVisible] = useState(false);
   const [bgColor, setBGColor] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await axios
+      .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
+      .then((res) => {
+        setClubs(res.data.clubs);
+      });
+    await axios
+      .get("https://ihsbackend.vercel.app/api/accounts/account", {
+        headers: {
+          bearer: await SecureStore.getItemAsync("bearer"),
+        },
+      })
+      .then(async (res) => {
+        if (res.data.success) {
+          setFavoritedClubs(res.data.account.favoritedClubs);
+        } else {
+          console.log(res.data.message);
+        }
+      })
+      .catch(async (err) => {
+        await SecureStore.deleteItemAsync("isLocal");
+        await SecureStore.deleteItemAsync("bearer");
+        await SecureStore.deleteItemAsync("classes");
+        alert(
+          "We have run into an error. Please force-quit the app and restart."
+        );
+      });
+    wait(200).then(() => setRefreshing(false));
+  }, []);
   useEffect(() => {
     const hi = async () =>
       setBGColor(await SecureStore.getItemAsync("bgColor"));
@@ -147,7 +172,7 @@ export default function ClubScreen({ navigation }) {
   if (!clubs) {
     return (
       <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="green" />
+        <ActivityIndicator animating={true} color="teal" />
       </View>
     );
   } else {
@@ -203,7 +228,11 @@ export default function ClubScreen({ navigation }) {
             </Dialog.Actions>
           </Dialog>
         </Portal>
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={{ marginTop: 10, marginBottom: 10 }}>
             <Text
               style={{
@@ -266,7 +295,7 @@ export default function ClubScreen({ navigation }) {
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
-                margin: 5,
+                margin: 10,
                 color: "teal",
               }}
               variant="titleLarge"

@@ -15,6 +15,7 @@ import {
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import Hyperlink from "react-native-hyperlink";
+import { TextLinearGradient } from "./GradientText";
 
 const wait = (timeout) => {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -245,7 +246,7 @@ export default function ClubScreen({ navigation }) {
             >
               Favorited Clubs
             </Text>
-            {favoritedClubs
+            {clubs
               .sort(function (a, b) {
                 var nameA = a.clubName.toLowerCase(),
                   nameB = b.clubName.toLowerCase();
@@ -256,40 +257,57 @@ export default function ClubScreen({ navigation }) {
                 return 0; //default return value (no sorting)
               })
               .map((d) => {
-                return (
-                  <Card
-                    style={{
-                      borderRadius: 15,
-                      marginLeft: 15,
-                      marginRight: 15,
-                      marginTop: 5,
-                    }}
-                  >
-                    <Card.Title
-                      title={
-                        d.clubName + " // Meetings in " + d.clubMeetingRoom
-                      }
-                      right={(props) => (
-                        <IconButton {...props} icon="heart" iconColor="red" />
-                      )}
-                    ></Card.Title>
-                    <Card.Content>
-                      <Paragraph style={{ marginTop: -20 }}>
-                        Description: {d.description}
-                        {"\n\n"}
-                        Register at:{" "}
-                        <Hyperlink
-                          linkStyle={{ color: "#CBC3E3" }}
-                          linkDefault={true}
-                        >
-                          <Text>{d.registerLink}</Text>
-                        </Hyperlink>
-                        {"\n"}
-                        President: {d.presidentName}
-                      </Paragraph>
-                    </Card.Content>
-                  </Card>
-                );
+                let inFavorite = false;
+                let newClubObj = Object.assign({}, d);
+                delete newClubObj.members;
+                for (let al = 0; al < favoritedClubs.length; al++) {
+                  if (
+                    JSON.stringify(favoritedClubs[al]) ==
+                    JSON.stringify(newClubObj)
+                  ) {
+                    inFavorite = true;
+                  }
+                }
+                if (inFavorite) {
+                  return (
+                    <Card
+                      style={{
+                        borderRadius: 15,
+                        marginLeft: 15,
+                        marginRight: 15,
+                        marginTop: 5,
+                      }}
+                    >
+                      <Card.Title
+                        title={
+                          d.clubName + " // Meetings in " + d.clubMeetingRoom
+                        }
+                        right={(props) => (
+                          <IconButton {...props} icon="heart" iconColor="red" />
+                        )}
+                      ></Card.Title>
+                      <Card.Content>
+                        <Paragraph style={{ marginTop: -20 }}>
+                          Description: {d.description}
+                          {"\n\n"}
+                          Register at:{" "}
+                          <Hyperlink
+                            linkStyle={{ color: "#CBC3E3" }}
+                            linkDefault={true}
+                          >
+                            <Text>{d.registerLink}</Text>
+                          </Hyperlink>
+                          {"\n"}
+                          President: {d.presidentName}
+                          {"\n"}
+                          <Paragraph style={{ fontWeight: "bold" }}>
+                            {d.members} people favorited this club.
+                          </Paragraph>
+                        </Paragraph>
+                      </Card.Content>
+                    </Card>
+                  );
+                }
               })}
             <Text
               style={{
@@ -314,8 +332,13 @@ export default function ClubScreen({ navigation }) {
               })
               .map((d) => {
                 let inFavorite = false;
+                let newClubObj = Object.assign({}, d);
+                delete newClubObj.members;
                 for (let al = 0; al < favoritedClubs.length; al++) {
-                  if (JSON.stringify(favoritedClubs[al]) == JSON.stringify(d)) {
+                  if (
+                    JSON.stringify(favoritedClubs[al]) ==
+                    JSON.stringify(newClubObj)
+                  ) {
                     inFavorite = true;
                   }
                 }
@@ -349,8 +372,15 @@ export default function ClubScreen({ navigation }) {
                                     prospectiveClub: d,
                                   }
                                 )
-                                .then((res) => {
+                                .then(async (res) => {
                                   if (res.data.success) {
+                                    await axios
+                                      .post(
+                                        "https://ihsbackend.vercel.app/api/accounts/getClubs"
+                                      )
+                                      .then((res) => {
+                                        setClubs(res.data.clubs);
+                                      });
                                     setFavoritedClubs(res.data.favoritedClubs);
                                     setLoading(false);
                                   } else {
@@ -374,6 +404,10 @@ export default function ClubScreen({ navigation }) {
                           </Hyperlink>
                           {"\n"}
                           President: {d.presidentName}
+                          {"\n"}
+                          <Paragraph style={{ fontWeight: "bold" }}>
+                            {d.members} people favorited this club.
+                          </Paragraph>
                         </Paragraph>
                       </Card.Content>
                     </Card>
@@ -381,6 +415,9 @@ export default function ClubScreen({ navigation }) {
                 }
               })}
           </View>
+          <Text style={{ textAlign: "center" }}>
+            Pull down to refresh club list.
+          </Text>
         </ScrollView>
       </View>
     );

@@ -11,8 +11,8 @@ Have the school in the palm of your hands with IHS Mobile, updated and remade fo
 - [x] Toggle showing of grades (ON/OFF)
 - [] Display X items at a time
 - [] Fix Android Notifications (test on KFire HD)
-- [] Create better-looking landing screen design
-- [] Introduction guide for first-time users
-- [] Show how many people favorited this club
+- [x] Create better-looking landing screen design
+- [x] Introduction guide for first-time users
+- [x] Show how many people favorited this club
 - [] Release on Apple Store
 - [] Release on Play Store

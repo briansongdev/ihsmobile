@@ -570,6 +570,13 @@ export default function CalendarScreen({ navigation }) {
           </View>
           <ScrollView style={{ marginBottom: 80 }}>
             <View style={{ alignItems: "center" }}>
+              {schedule.length == 0 ? (
+                <Text style={{ textAlign: "center" }}>
+                  Add events by long-pressing a date.
+                </Text>
+              ) : (
+                <></>
+              )}
               {schedule.map((d) => {
                 const time1 = new Date(d.datetime),
                   time2 = new Date(currSelectedDate);

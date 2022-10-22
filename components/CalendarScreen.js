@@ -26,6 +26,7 @@ import RNDateTimePicker from "@react-native-community/datetimepicker";
 import ConfettiCannon from "react-native-confetti-cannon";
 import * as Device from "expo-device";
 import { useFocusEffect } from "@react-navigation/native";
+import { AppButton } from "./WelcomeGuide";
 
 const workout = { key: "workout", color: "green" };
 const vacation = { key: "vacation", color: "red", selectedDotColor: "blue" };
@@ -420,18 +421,14 @@ export default function CalendarScreen({ navigation }) {
                   <RNDateTimePicker
                     mode="time"
                     value={datete}
+                    style={{ marginBottom: 20 }}
                     onChange={(event, date) => {
                       if (event.type == "set") {
                         setDatete(date);
                       }
                     }}
                   />
-                </Dialog.Content>
-                <Dialog.Actions>
-                  <Button textColor="red" onPress={() => setVisible(false)}>
-                    Cancel
-                  </Button>
-                  <Button
+                  <AppButton
                     onPress={async () => {
                       setLoading(true);
                       let { eventTitle, description } = eventDraft;
@@ -450,8 +447,14 @@ export default function CalendarScreen({ navigation }) {
                             Haptics.notificationAsync(
                               Haptics.NotificationFeedbackType.Success
                             );
-                            setShoot(false);
-                            setShoot(true);
+                            let schedule1 = e.data.schedule.sort(function (
+                              x,
+                              y
+                            ) {
+                              return (
+                                Date.parse(x.datetime) - Date.parse(y.datetime)
+                              );
+                            });
                             setSchedule(
                               e.data.schedule.sort(function (x, y) {
                                 return (
@@ -461,11 +464,11 @@ export default function CalendarScreen({ navigation }) {
                               })
                             );
                             let newBigObject = {};
-                            for (let i = 0; i < schedule.length; i++) {
-                              if (schedule[i].active) {
+                            for (let i = 0; i < schedule1.length; i++) {
+                              if (schedule1[i].active) {
                                 newBigObject[
                                   new Date(
-                                    schedule[i].datetime
+                                    schedule1[i].datetime
                                   ).toLocaleDateString("en-CA")
                                 ] = {
                                   marked: true,
@@ -474,7 +477,7 @@ export default function CalendarScreen({ navigation }) {
                               } else {
                                 newBigObject[
                                   new Date(
-                                    schedule[i].datetime
+                                    schedule1[i].datetime
                                   ).toLocaleDateString("en-CA")
                                 ] = {
                                   marked: true,
@@ -491,10 +494,16 @@ export default function CalendarScreen({ navigation }) {
                         });
                     }}
                     disabled={eventDraft.eventTitle == "" || datete == ""}
+                    title="Submit"
+                  />
+                  <Button
+                    textColor="red"
+                    style={{ marginTop: -40 }}
+                    onPress={() => setVisible(false)}
                   >
-                    Submit
+                    Cancel and return
                   </Button>
-                </Dialog.Actions>
+                </Dialog.Content>
               </ScrollView>
             </KeyboardAvoidingView>
           </Dialog>
@@ -707,6 +716,14 @@ export default function CalendarScreen({ navigation }) {
                                 )
                                 .then((res) => {
                                   if (res.data.success) {
+                                    let schedule1 = res.data.schedule.sort(
+                                      function (x, y) {
+                                        return (
+                                          Date.parse(x.datetime) -
+                                          Date.parse(y.datetime)
+                                        );
+                                      }
+                                    );
                                     setSchedule(
                                       res.data.schedule.sort(function (x, y) {
                                         return (
@@ -716,11 +733,11 @@ export default function CalendarScreen({ navigation }) {
                                       })
                                     );
                                     let newBigObject = {};
-                                    for (let i = 0; i < schedule.length; i++) {
-                                      if (schedule[i].active) {
+                                    for (let i = 0; i < schedule1.length; i++) {
+                                      if (schedule1[i].active) {
                                         newBigObject[
                                           new Date(
-                                            schedule[i].datetime
+                                            schedule1[i].datetime
                                           ).toLocaleDateString("en-CA")
                                         ] = {
                                           marked: true,
@@ -729,7 +746,7 @@ export default function CalendarScreen({ navigation }) {
                                       } else {
                                         newBigObject[
                                           new Date(
-                                            schedule[i].datetime
+                                            schedule1[i].datetime
                                           ).toLocaleDateString("en-CA")
                                         ] = {
                                           marked: true,
@@ -784,6 +801,14 @@ export default function CalendarScreen({ navigation }) {
                                   )
                                   .then((res) => {
                                     if (res.data.success) {
+                                      let schedule1 = res.data.schedule.sort(
+                                        function (x, y) {
+                                          return (
+                                            Date.parse(x.datetime) -
+                                            Date.parse(y.datetime)
+                                          );
+                                        }
+                                      );
                                       setSchedule(
                                         res.data.schedule.sort(function (x, y) {
                                           return (
@@ -795,13 +820,13 @@ export default function CalendarScreen({ navigation }) {
                                       let newBigObject = {};
                                       for (
                                         let i = 0;
-                                        i < schedule.length;
+                                        i < schedule1.length;
                                         i++
                                       ) {
-                                        if (schedule[i].active) {
+                                        if (schedule1[i].active) {
                                           newBigObject[
                                             new Date(
-                                              schedule[i].datetime
+                                              schedule1[i].datetime
                                             ).toLocaleDateString("en-CA")
                                           ] = {
                                             marked: true,
@@ -810,7 +835,7 @@ export default function CalendarScreen({ navigation }) {
                                         } else {
                                           newBigObject[
                                             new Date(
-                                              schedule[i].datetime
+                                              schedule1[i].datetime
                                             ).toLocaleDateString("en-CA")
                                           ] = {
                                             marked: true,

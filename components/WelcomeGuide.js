@@ -12,11 +12,12 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
 import Carousel, { Pagination } from "react-native-snap-carousel";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-export const AppButton = ({ onPress, title, icon }) => (
+export const AppButton = ({ onPress, title, icon, disabled }) => (
   <TouchableOpacity
     activeOpacity={0.7}
     onPress={onPress}
-    style={styles.appButtonContainer}
+    style={!disabled ? styles.appButtonContainer : styles.appButtonContainer1}
+    disabled={disabled}
   >
     {icon ? (
       <View
@@ -192,6 +193,17 @@ const styles = StyleSheet.create({
   appButtonContainer: {
     elevation: 8,
     backgroundColor: "teal",
+    borderRadius: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 50,
+    width: 330,
+    height: 55,
+    justifyContent: "center",
+  },
+  appButtonContainer1: {
+    elevation: 8,
+    backgroundColor: "gray",
     borderRadius: 15,
     paddingVertical: 10,
     paddingHorizontal: 12,

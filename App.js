@@ -38,7 +38,11 @@ import PrivacyPolicy from "./components/PrivacyPolicy.js";
 import WelcomeGuide from "./components/WelcomeGuide.js";
 import { LinearGradient } from "expo-linear-gradient";
 import MaskedView from "@react-native-masked-view/masked-view";
-import { TextLinearGradient } from "./components/GradientText.js";
+import {
+  TextLinearGradient,
+  VibrantLinearGradient,
+} from "./components/GradientText.js";
+import { AppButton } from "./components/WelcomeGuide";
 
 function Account({ route, navigation }) {
   const { isLocal } = route.params;
@@ -295,32 +299,52 @@ function Landing({ navigation }) {
     );
   };
   return (
-    <View style={styles.container}>
-      <Image
-        style={styles.tinyLogo}
-        source={{
-          uri: "https://irvinehigh.iusd.org/sites/irvinehigh/files/images/footer2x_0.png",
-        }}
-      />
-      <TextLinearGradient>Welcome to IHS Students!</TextLinearGradient>
-      <Text variant="titleMedium">
-        The school, in the palm of your hand.{"\n"}
-      </Text>
-      <Text variant="titleMedium">{"\n"}Let's get started, Vaqueros.</Text>
-      <Button
-        icon="account-plus"
-        mode="elevated"
-        style={{ margin: 10 }}
-        contentStyle={{ minWidth: 300 }}
-        onPress={() =>
-          navigation.navigate("Account", {
-            isLocal: false,
-          })
-        }
-      >
-        Sign in with Aeries
-      </Button>
-    </View>
+    <>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Image
+            style={styles.tinyLogo}
+            source={{
+              uri: "https://irvinehigh.iusd.org/sites/irvinehigh/files/images/footer2x_0.png",
+            }}
+          />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                marginLeft: 10,
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+              variant="headlineMedium"
+            >
+              Welcome to
+            </Text>
+            <TextLinearGradient> IHS Students!</TextLinearGradient>
+          </View>
+          <Text
+            variant="titleMedium"
+            style={{ textAlign: "center", marginBottom: 50 }}
+          >
+            Let's get started, Vaqueros.
+          </Text>
+        </ScrollView>
+        <AppButton
+          icon={"hi"}
+          onPress={() => {
+            navigation.navigate("Account", {
+              isLocal: false,
+            });
+          }}
+          title="Sign in with Aeries"
+        />
+      </View>
+    </>
   );
 }
 const Stack = createNativeStackNavigator();
@@ -494,5 +518,6 @@ const styles = StyleSheet.create({
   tinyLogo: {
     width: 276,
     height: 228,
+    margin: 50,
   },
 });

@@ -11,14 +11,32 @@ import { Text } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
 import Carousel, { Pagination } from "react-native-snap-carousel";
-
-const AppButton = ({ onPress, title }) => (
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+export const AppButton = ({ onPress, title, icon }) => (
   <TouchableOpacity
     activeOpacity={0.7}
     onPress={onPress}
     style={styles.appButtonContainer}
   >
-    <Text style={styles.appButtonText}>{title}</Text>
+    {icon ? (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <MaterialCommunityIcons
+          name="account-plus-outline"
+          size={24}
+          color="white"
+          style={{ marginRight: 10 }}
+        />
+        <Text style={styles.appButtonText}>{title}</Text>
+      </View>
+    ) : (
+      <Text style={styles.appButtonText}>{title}</Text>
+    )}
   </TouchableOpacity>
 );
 

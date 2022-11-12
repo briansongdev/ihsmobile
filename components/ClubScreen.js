@@ -11,50 +11,37 @@ import {
   Portal,
   IconButton,
   ActivityIndicator,
+  Avatar,
 } from "react-native-paper";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import Hyperlink from "react-native-hyperlink";
 import { TextLinearGradient } from "./GradientText";
+import { Agenda } from "react-native-calendars";
+import { Image } from "react-native";
+import ReactLinkify from "react-linkify";
 
 const wait = (timeout) => {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 };
 
 export default function ClubScreen({ navigation }) {
-  const [clubs, setClubs] = useState([]);
-  const [favoritedClubs, setFavoritedClubs] = useState([]);
+  const [events, setEvents] = useState([]);
+  // const [favoritedClubs, setFavoritedClubs] = useState([]);
   const [infoVisible, setInfoVisible] = useState(false);
   const [bgColor, setBGColor] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await axios
-      .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
+      .post("https://ihsbackend.vercel.app/api/accounts/getSportEvents")
       .then((res) => {
-        setClubs(res.data.clubs);
-      });
-    await axios
-      .get("https://ihsbackend.vercel.app/api/accounts/account", {
-        headers: {
-          bearer: await SecureStore.getItemAsync("bearer"),
-        },
-      })
-      .then(async (res) => {
-        if (res.data.success) {
-          setFavoritedClubs(res.data.account.favoritedClubs);
-        } else {
-          console.log(res.data.message);
-        }
-      })
-      .catch(async (err) => {
-        await SecureStore.deleteItemAsync("isLocal");
-        await SecureStore.deleteItemAsync("bearer");
-        await SecureStore.deleteItemAsync("classes");
-        alert(
-          "We have run into an error. Please force-quit the app and restart."
+        setEvents(
+          res.data.events.sort(function (a, b) {
+            return new Date(a.date) - new Date(b.date);
+          })
         );
       });
     wait(200).then(() => setRefreshing(false));
@@ -67,29 +54,12 @@ export default function ClubScreen({ navigation }) {
   useEffect(() => {
     async function fetchClubs() {
       await axios
-        .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
+        .post("https://ihsbackend.vercel.app/api/accounts/getSportEvents")
         .then((res) => {
-          setClubs(res.data.clubs);
-        });
-      await axios
-        .get("https://ihsbackend.vercel.app/api/accounts/account", {
-          headers: {
-            bearer: await SecureStore.getItemAsync("bearer"),
-          },
-        })
-        .then(async (res) => {
-          if (res.data.success) {
-            setFavoritedClubs(res.data.account.favoritedClubs);
-          } else {
-            console.log(res.data.message);
-          }
-        })
-        .catch(async (err) => {
-          await SecureStore.deleteItemAsync("isLocal");
-          await SecureStore.deleteItemAsync("bearer");
-          await SecureStore.deleteItemAsync("classes");
-          alert(
-            "We have run into an error. Please force-quit the app and restart."
+          setEvents(
+            res.data.events.sort(function (a, b) {
+              return new Date(a.date) - new Date(b.date);
+            })
           );
         });
       navigation.setOptions({
@@ -126,32 +96,6 @@ export default function ClubScreen({ navigation }) {
     useCallback(() => {
       const fetchUser = async () => {
         setBGColor(await SecureStore.getItemAsync("bgColor"));
-        await axios
-          .post("https://ihsbackend.vercel.app/api/accounts/getClubs")
-          .then((res) => {
-            setClubs(res.data.clubs);
-          });
-        await axios
-          .get("https://ihsbackend.vercel.app/api/accounts/account", {
-            headers: {
-              bearer: await SecureStore.getItemAsync("bearer"),
-            },
-          })
-          .then(async (res) => {
-            if (res.data.success) {
-              setFavoritedClubs(res.data.account.favoritedClubs);
-            } else {
-              console.log(res.data.message);
-            }
-          })
-          .catch(async (err) => {
-            await SecureStore.deleteItemAsync("isLocal");
-            await SecureStore.deleteItemAsync("bearer");
-            await SecureStore.deleteItemAsync("classes");
-            alert(
-              "We have run into an error. Please force-quit the app and restart."
-            );
-          });
         navigation.setOptions({
           headerLeft: () => (
             <IconButton
@@ -170,7 +114,7 @@ export default function ClubScreen({ navigation }) {
     }, [])
   );
 
-  if (!clubs) {
+  if (!events) {
     return (
       <View style={styles.topContainer}>
         <ActivityIndicator animating={true} color="teal" />
@@ -179,7 +123,7 @@ export default function ClubScreen({ navigation }) {
   } else {
     return (
       <View style={styles.container}>
-        <Portal>
+        {/* <Portal>
           <Dialog visible={loading} dismissable={false}>
             <Dialog.Content>
               <View
@@ -192,7 +136,7 @@ export default function ClubScreen({ navigation }) {
               </View>
             </Dialog.Content>
           </Dialog>
-        </Portal>
+        </Portal> */}
         {/* <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
           <Card.Content>
             <Title>President of an existing club?</Title>
@@ -213,12 +157,9 @@ export default function ClubScreen({ navigation }) {
         </Card> */}
         <Portal>
           <Dialog visible={infoVisible} dismissable={false}>
-            <Dialog.Title>Clubs</Dialog.Title>
+            <Dialog.Title>Sport Events</Dialog.Title>
             <Dialog.Content>
-              <Paragraph>
-                Check out Irvine High School clubs and favorite the ones you
-                like!
-              </Paragraph>
+              <Paragraph>Check out upcoming sporting events for IHS.</Paragraph>
             </Dialog.Content>
             <Dialog.Actions>
               <Button textColor="blue" onPress={() => setInfoVisible(false)}>
@@ -228,11 +169,102 @@ export default function ClubScreen({ navigation }) {
           </Dialog>
         </Portal>
         <ScrollView
+          style={{ marginBottom: 75 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <View style={{ marginTop: 10, marginBottom: 10 }}>
+          <View style={styles.container}>
+            <Text
+              style={{ marginTop: 10, textAlign: "center" }}
+              variant="labelLarge"
+            >
+              Cheer your fellow Vaqueros on to victory!
+            </Text>
+            {events.map((d) => {
+              let stringPNG = "",
+                ftColor = "";
+              if (new Date(d.date) - new Date() > -86400000) {
+                if (d.team.includes("Football")) {
+                  stringPNG = "fb.png";
+                } else if (d.team.includes("Water Polo")) {
+                  stringPNG = "waterpolo.png";
+                } else if (d.team.includes("Basketball")) {
+                  stringPNG = "bask.png";
+                } else if (d.team.includes("Soccer")) {
+                  stringPNG = "soc.png";
+                } else if (d.team.includes("Wrestling")) {
+                  stringPNG = "wrest.png";
+                } else if (d.team.includes("Baseball")) {
+                  stringPNG = "base.png";
+                } else if (d.team.includes("Tennis")) {
+                  stringPNG = "ten.png";
+                } else if (d.team.includes("Cross Country")) {
+                  stringPNG = "xc.png";
+                } else if (d.team.includes("Volleyball")) {
+                  stringPNG = "volleyball.png";
+                } else if (d.team.includes("Lacrosse")) {
+                  stringPNG = "lacrosse.png";
+                } else {
+                  stringPNG = "xc.png";
+                }
+                if (d.team.includes("Boys")) {
+                  ftColor = "teal";
+                } else {
+                  ftColor = "#fc46aa";
+                }
+                return (
+                  <Card
+                    style={{
+                      borderRadius: 15,
+                      marginLeft: 35,
+                      marginRight: 35,
+                      marginTop: 15,
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    <Card.Title
+                      titleNumberOfLines={1}
+                      titleStyle={{ fontWeight: "bold", color: ftColor }}
+                      title={d.team}
+                    />
+                    <Card.Content style={{ marginTop: -15 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <View style={{ maxWidth: "75%" }}>
+                          <Text
+                            style={{
+                              color: ftColor,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {d.date}
+                          </Text>
+                          <Text>{d.description}</Text>
+                          <Text>{d.homeAway}</Text>
+                        </View>
+                        <View>
+                          <Image
+                            style={{ width: 50, height: 50 }}
+                            source={{
+                              uri:
+                                "https://res.cloudinary.com/dfy4tal1p/image/upload/v1668273151/" +
+                                stringPNG,
+                            }}
+                          />
+                        </View>
+                      </View>
+                    </Card.Content>
+                  </Card>
+                );
+              }
+            })}
+          </View>
+          {/* <View style={{ marginTop: 10, marginBottom: 10 }}>
             <Text
               style={{
                 textAlign: "center",
@@ -415,9 +447,10 @@ export default function ClubScreen({ navigation }) {
                   );
                 }
               })}
-          </View>
-          <Text style={{ textAlign: "center" }}>
-            Pull down to refresh club list.
+          </View> */}
+
+          <Text style={{ textAlign: "center", margin: 10 }}>
+            Pull down to refresh upcoming events.
           </Text>
         </ScrollView>
       </View>

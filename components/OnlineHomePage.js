@@ -159,7 +159,7 @@ function HomeScreen({ navigation }) {
         ) {
           await axios
             .get(
-              "https://api.openweathermap.org/data/2.5/weather?lat=33.7027&lon=-117.7816&appid=7f88733c44e171b82e02d7bac8213ade"
+              "https://api.openweathermap.org/data/2.5/weather?lat=33.6846&lon=-117.8265&appid=7f88733c44e171b82e02d7bac8213ade"
             )
             .then((res) => {
               setWetData(res.data);
@@ -184,7 +184,7 @@ function HomeScreen({ navigation }) {
       if (Object.keys(account).length == 0 || calendar.length == 0) {
         await axios
           .get(
-            "https://api.openweathermap.org/data/2.5/weather?lat=33.7027&lon=-117.7816&appid=7f88733c44e171b82e02d7bac8213ade"
+            "https://api.openweathermap.org/data/2.5/weather?lat=33.6846&lon=-117.8265&appid=7f88733c44e171b82e02d7bac8213ade"
           )
           .then((res) => {
             setWetData(res.data);
@@ -334,7 +334,17 @@ function HomeScreen({ navigation }) {
   } else {
     navigation.setOptions({
       headerShown: true,
-      tabBarStyle: { display: "flex" },
+      tabBarStyle: {
+        display: "flex",
+        backgroundColor: "rgba(255, 255, 255, 0.6)",
+        paddingTop: 7,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        borderLeftWidth: 0.2,
+        borderRightWidth: 0.2,
+        position: "absolute",
+        overflow: "hidden",
+      },
     });
     if (refreshVisible) {
       return (
@@ -583,7 +593,10 @@ function HomeScreen({ navigation }) {
                 </Text>
                 <LinearGradient
                   style={{
-                    margin: 20,
+                    marginBottom: 20,
+                    marginLeft: 20,
+                    marginRight: 20,
+                    marginTop: 0,
                     borderRadius: 10,
                     height: 130,
                   }}
@@ -667,7 +680,7 @@ function HomeScreen({ navigation }) {
                   </View>
                 </LinearGradient>
                 <VibrantLinearGradient2 variant="displaySmall">
-                  Coming up...
+                  Coming up:
                 </VibrantLinearGradient2>
               </View>
             </Animated.View>
@@ -2008,6 +2021,7 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
+                                      fontSize: 16,
                                     }}
                                   >
                                     Advisement -{" "}
@@ -2284,6 +2298,7 @@ function HomeScreen({ navigation }) {
                                   <Title
                                     style={{
                                       textAlign: "center",
+                                      fontSize: 16,
                                     }}
                                   >
                                     Advisement -{" "}
@@ -3414,16 +3429,12 @@ export default function OnlineHomePage({ navigation }) {
         initialRouteName="Home"
       >
         <Tab.Screen
-          name="Clubs"
+          name="Sporting Events"
           options={{
             tabBarShowLabel: false,
             headerShadowVisible: false,
             tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="account-group"
-                color={color}
-                size={size}
-              />
+              <MaterialCommunityIcons name="trophy" color={color} size={size} />
             ),
             lazy: false,
           }}

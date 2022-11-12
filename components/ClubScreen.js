@@ -193,7 +193,7 @@ export default function ClubScreen({ navigation }) {
             </Dialog.Content>
           </Dialog>
         </Portal>
-        <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
+        {/* <Card mode="contained" style={{ backgroundColor: "#ffffff" }}>
           <Card.Content>
             <Title>President of an existing club?</Title>
             <Paragraph>Add your club to the app here.</Paragraph>
@@ -210,16 +210,14 @@ export default function ClubScreen({ navigation }) {
               Submit your club
             </Button>
           </Card.Actions>
-        </Card>
+        </Card> */}
         <Portal>
           <Dialog visible={infoVisible} dismissable={false}>
             <Dialog.Title>Clubs</Dialog.Title>
             <Dialog.Content>
               <Paragraph>
-                Check out Irvine High School clubs!{"\n\n"}If you would like to
-                display your club on this app, click "Submit your club." To
-                moderate spam, your request will be manually approved (and take
-                a couple days to show up). Thank you!
+                Check out Irvine High School clubs and favorite the ones you
+                like!
               </Paragraph>
             </Dialog.Content>
             <Dialog.Actions>
@@ -276,29 +274,30 @@ export default function ClubScreen({ navigation }) {
                         marginLeft: 15,
                         marginRight: 15,
                         marginTop: 5,
+                        marginBottom: 10,
                       }}
                     >
                       <Card.Title
-                        title={
-                          d.clubName + " // Meetings in " + d.clubMeetingRoom
-                        }
+                        title={d.clubName}
                         right={(props) => (
                           <IconButton {...props} icon="heart" iconColor="red" />
                         )}
                       ></Card.Title>
                       <Card.Content>
                         <Paragraph style={{ marginTop: -20 }}>
-                          Description: {d.description}
+                          <Text style={{ fontWeight: "bold" }}>
+                            {d.clubMeetingRoom}
+                          </Text>
                           {"\n\n"}
-                          Register at:{" "}
+                          {d.description}
+                          {"\n\n"}
+                          Contact:{" "}
                           <Hyperlink
                             linkStyle={{ color: "#CBC3E3" }}
                             linkDefault={true}
                           >
                             <Text>{d.registerLink}</Text>
                           </Hyperlink>
-                          {"\n"}
-                          President: {d.presidentName}
                           {"\n"}
                           <Paragraph style={{ fontWeight: "bold" }}>
                             {d.members} people favorited this club.
@@ -309,6 +308,7 @@ export default function ClubScreen({ navigation }) {
                   );
                 }
               })}
+            <Text style={{ textAlign: "center" }}>End of favorited clubs.</Text>
             <Text
               style={{
                 textAlign: "center",
@@ -318,7 +318,7 @@ export default function ClubScreen({ navigation }) {
               }}
               variant="titleLarge"
             >
-              Other Clubs
+              Other Clubs (Alphabetical)
             </Text>
             {clubs
               .sort(function (a, b) {
@@ -350,12 +350,11 @@ export default function ClubScreen({ navigation }) {
                         marginLeft: 15,
                         marginRight: 15,
                         marginTop: 5,
+                        marginBottom: 10,
                       }}
                     >
                       <Card.Title
-                        title={
-                          d.clubName + " // Meetings in " + d.clubMeetingRoom
-                        }
+                        title={d.clubName}
                         right={(props) => (
                           <IconButton
                             {...props}
@@ -393,17 +392,19 @@ export default function ClubScreen({ navigation }) {
                       ></Card.Title>
                       <Card.Content>
                         <Paragraph style={{ marginTop: -20 }}>
-                          Description: {d.description}
+                          <Text style={{ fontWeight: "bold" }}>
+                            {d.clubMeetingRoom}
+                          </Text>
                           {"\n\n"}
-                          Register at:{" "}
+                          {d.description}
+                          {"\n\n"}
+                          Contact:{" "}
                           <Hyperlink
                             linkStyle={{ color: "#CBC3E3" }}
                             linkDefault={true}
                           >
                             <Text>{d.registerLink}</Text>
                           </Hyperlink>
-                          {"\n"}
-                          President: {d.presidentName}
                           {"\n"}
                           <Paragraph style={{ fontWeight: "bold" }}>
                             {d.members} people favorited this club.

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -9,6 +9,7 @@ import {
   Animated,
   Alert,
   KeyboardAvoidingView,
+  AppState,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
@@ -25,11 +26,12 @@ import {
   Button,
   ActivityIndicator,
   Switch,
+  Divider,
 } from "react-native-paper";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { IMPORTEDB64, SCHEDULEINTERP } from "../importedURI";
+import { SCHEDULEINTERP } from "../importedURI";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import greetingTime from "greeting-time";
 import CalendarScreen from "./CalendarScreen.js";
@@ -37,6 +39,7 @@ import ChatScreen from "./BookmarkScreen.js";
 import LocationScreen from "./FlexTimeScreen.js";
 import ClubScreen from "./ClubScreen.js";
 import InteractiveTextInput from "react-native-text-input-interactive";
+import AnimatedLottieView from "lottie-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 function HomeScreen({ navigation }) {
@@ -53,8 +56,21 @@ function HomeScreen({ navigation }) {
   const [relevantURI, setURI] = useState("");
   const [firstLoad, setFirstLoad] = useState(true);
   const [uid, setUID] = useState("");
-  const [time, setTime] = useState(new Date().getMinutes());
   const [trueName, setTrueName] = useState("");
+  const [wetData, setWetData] = useState({});
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
+  // fadeAnim will be used as the value for opacity. Initial Value: 0
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const fadeIn = () => {
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  };
   const INJECTED_JAVASCRIPT = `(
     function() {
       window.ReactNativeWebView.postMessage(document.documentElement.innerHTML);
@@ -134,11 +150,45 @@ function HomeScreen({ navigation }) {
   });
 
   useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      async (nextAppState) => {
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
+          await axios
+            .get(
+              "https://api.openweathermap.org/data/2.5/weather?lat=33.7027&lon=-117.7816&appid=7f88733c44e171b82e02d7bac8213ade"
+            )
+            .then((res) => {
+              setWetData(res.data);
+            });
+        }
+
+        appState.current = nextAppState;
+        setAppStateVisible(appState.current);
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
     const hi = async () => {
       if ((await SecureStore.getItemAsync("newUser")) == "true") {
         navigation.navigate("Welcome, Vaquero.");
       }
       if (Object.keys(account).length == 0 || calendar.length == 0) {
+        await axios
+          .get(
+            "https://api.openweathermap.org/data/2.5/weather?lat=33.7027&lon=-117.7816&appid=7f88733c44e171b82e02d7bac8213ade"
+          )
+          .then((res) => {
+            setWetData(res.data);
+          });
         await axios
           .get("https://ihsbackend.vercel.app/api/accounts/account", {
             headers: {
@@ -186,7 +236,7 @@ function HomeScreen({ navigation }) {
             bearer: bearr,
           })
           .then((res) => {
-            setCalendar(res.data.calendar);
+            setTimeout(() => setCalendar(res.data.calendar), 1500);
           })
           .catch((err) => {
             if (err.response) {
@@ -255,13 +305,37 @@ function HomeScreen({ navigation }) {
       setBGColor(await SecureStore.getItemAsync("bgColor"));
     hi();
   }, []);
-  if (Object.keys(account).length == 0 || calendar.length == 0) {
+  if (
+    Object.keys(account).length == 0 ||
+    calendar.length == 0 ||
+    Object.keys(wetData).length == 0
+  ) {
+    navigation.setOptions({
+      headerShown: false,
+      tabBarStyle: { display: "none" },
+    });
     return (
-      <View style={styles.topContainer}>
-        <ActivityIndicator animating={true} color="teal" />
+      <View
+        style={{
+          backgroundColor: "white",
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <AnimatedLottieView
+          autoPlay
+          source={{
+            uri: "https://assets10.lottiefiles.com/private_files/lf30_c3gZyd.json",
+          }}
+        />
       </View>
     );
   } else {
+    navigation.setOptions({
+      headerShown: true,
+      tabBarStyle: { display: "flex" },
+    });
     if (refreshVisible) {
       return (
         <>
@@ -397,6 +471,7 @@ function HomeScreen({ navigation }) {
         </>
       );
     } else {
+      fadeIn();
       return (
         <>
           <Portal>
@@ -409,6 +484,7 @@ function HomeScreen({ navigation }) {
               <Dialog.Content>
                 <KeyboardAvoidingView behavior="padding">
                   <ScrollView keyboardShouldPersistTaps="handled">
+                    <Text>Display name</Text>
                     <InteractiveTextInput
                       placeholder="Set preferred first name here (if different from legal name)"
                       autoComplete="none"
@@ -424,8 +500,7 @@ function HomeScreen({ navigation }) {
                       textInputStyle={{ width: "90%", margin: 10 }}
                     ></InteractiveTextInput>
                     <Paragraph>
-                      Choose a nice background for yourself. More colors may be
-                      added in the future.
+                      Choose a nice background for yourself.
                     </Paragraph>
                     <View
                       style={{
@@ -455,58 +530,147 @@ function HomeScreen({ navigation }) {
             </Dialog>
           </Portal>
           <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
-            <View style={{ backgroundColor: bgColor }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
+            <Animated.View
+              style={{ backgroundColor: bgColor, opacity: fadeAnim }}
+            >
+              <View style={{ backgroundColor: bgColor }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      marginLeft: 10,
+                      textAlign: "center",
+                      fontWeight: "bold",
+                    }}
+                    variant="displaySmall"
+                  >
+                    {greetingTime(new Date())},
+                  </Text>
+                  <VibrantLinearGradient variant="displaySmall">
+                    {" "}
+                    {trueName.split(" ")[0]}!
+                  </VibrantLinearGradient>
+                </View>
                 <Text
                   style={{
                     marginLeft: 10,
+                    marginBottom: 10,
                     textAlign: "center",
-                    fontWeight: "bold",
                   }}
-                  variant="displaySmall"
+                  variant="labelMedium"
                 >
-                  {greetingTime(new Date())},
-                </Text>
-                <VibrantLinearGradient variant="displaySmall">
                   {" "}
-                  {trueName.split(" ")[0]}!
-                </VibrantLinearGradient>
-              </View>
-              <Text
-                style={{
-                  marginLeft: 10,
-                  marginBottom: 10,
-                  textAlign: "center",
-                }}
-                variant="labelMedium"
-              >
-                {" "}
-                <Text style={{ fontWeight: "bold", color: "teal" }}>
-                  {new Date().toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}{" "}
-                  //{" "}
-                  {
-                    SCHEDULEINTERP[
-                      calendar[new Date().getMonth() - 8][
-                        new Date().getDate() - 1
+                  <Text style={{ fontWeight: "bold", color: "teal" }}>
+                    {new Date().toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}{" "}
+                    //{" "}
+                    {
+                      SCHEDULEINTERP[
+                        calendar[new Date().getMonth() - 8][
+                          new Date().getDate() - 1
+                        ]
                       ]
-                    ]
-                  }
+                    }
+                  </Text>
                 </Text>
-              </Text>
-              <VibrantLinearGradient2 variant="displaySmall">
-                Coming up...
-              </VibrantLinearGradient2>
-            </View>
+                <LinearGradient
+                  style={{
+                    margin: 20,
+                    borderRadius: 10,
+                    height: 130,
+                  }}
+                  start={{ x: 0, y: 1 }}
+                  end={{ x: 1, y: 1 }}
+                  colors={["skyblue", "#FFB6C1"]}
+                >
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexDirection: "row",
+                      height: 130,
+                    }}
+                  >
+                    <View
+                      style={{
+                        alignItems: "left",
+                        width: "50%",
+                      }}
+                    >
+                      <Image
+                        style={{ width: 120, height: 120, marginLeft: 10 }}
+                        source={{
+                          uri: "https://cdn-icons-png.flaticon.com/512/4052/4052984.png",
+                        }}
+                      />
+                    </View>
+                    <View style={{ padding: 10, width: "50%" }}>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: "white",
+                          fontFamily: "PlexMed",
+                        }}
+                      >
+                        {wetData.weather[0].main}
+                      </Text>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: "white",
+                          fontSize: 36,
+                          fontWeight: "600",
+                          fontFamily: "PlexSans",
+                        }}
+                      >
+                        {Math.round((wetData.main.temp - 273.15) * 1.8 + 32)}°
+                      </Text>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: "white",
+                          fontFamily: "PlexReg",
+                        }}
+                      >
+                        Feels like{" "}
+                        {Math.round(
+                          (wetData.main.feels_like - 273.15) * 1.8 + 32
+                        )}
+                        {""}°
+                      </Text>
+                      <Text
+                        style={{
+                          textAlign: "right",
+                          color: "white",
+                          fontFamily: "PlexReg",
+                        }}
+                      >
+                        Lo:{" "}
+                        {Math.round(
+                          (wetData.main.temp_min - 273.15) * 1.8 + 32
+                        )}
+                        {"° "}// Hi:{" "}
+                        {Math.round(
+                          (wetData.main.temp_max - 273.15) * 1.8 + 32
+                        )}
+                        {""}°
+                      </Text>
+                    </View>
+                  </View>
+                </LinearGradient>
+                <VibrantLinearGradient2 variant="displaySmall">
+                  Coming up...
+                </VibrantLinearGradient2>
+              </View>
+            </Animated.View>
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
                 switch (
@@ -531,10 +695,9 @@ function HomeScreen({ navigation }) {
                               Break!
                             </Title>
                             <Paragraph>
-                              Enjoy your day off!{"\n\n"}(Make sure to check the
-                              IHS website for "special" days, like PSAT testing
-                              and the finals schedule. These may not accurately
-                              reflect in your schedule.)
+                              Enjoy your day off!{"\n\n"}(Check the IHS website
+                              for "special" days, like the finals schedule.
+                              These won't reflect on this app.)
                             </Paragraph>
                           </Card.Content>
                         </Card>
@@ -757,7 +920,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -998,7 +1164,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -1159,7 +1328,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -1435,7 +1607,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -1708,7 +1883,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -1980,7 +2158,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -2253,7 +2434,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -2495,7 +2679,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -2736,7 +2923,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -2899,7 +3089,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -3062,7 +3255,10 @@ function HomeScreen({ navigation }) {
                             >
                               <Card.Content>
                                 <Title
-                                  style={{ fontWeight: "bold", color: "teal" }}
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: "teal",
+                                  }}
                                 >
                                   {d.CourseName} - Room {d.RoomNumber} - Per{" "}
                                   {d.PeriodTitle}
@@ -3253,9 +3449,7 @@ export default function OnlineHomePage({ navigation }) {
             headerTitle: (props) => (
               <Image
                 style={styles.tinyLogo}
-                source={{
-                  uri: "data:image/png;base64," + IMPORTEDB64,
-                }}
+                source={require("../assets/Man.png")}
               />
             ),
             headerShadowVisible: false,

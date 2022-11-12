@@ -10,6 +10,8 @@ import {
   ImageBackground,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
 import * as Updates from "expo-updates";
 import {
   Button,
@@ -353,6 +355,16 @@ export default function App() {
   const [isSignedIn, setSignedIn] = useState(false);
   const [isLoading, setLoading] = useState(true);
   const [isDone, setIsDone] = useState(false);
+  const [fontsLoaded] = useFonts({
+    PlexSans: require("./assets/IBMPlexSans-Light.ttf"),
+    PlexReg: require("./assets/IBMPlexSans-Regular.ttf"),
+    PlexMed: require("./assets/IBMPlexSans-Medium.ttf"),
+  });
+
+  SplashScreen.preventAutoHideAsync().catch(() => {
+    /* reloading the app might trigger some race conditions, ignore them */
+  });
+
   useEffect(() => {
     LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
     LogBox.ignoreAllLogs(); //Ignore all log notifications
@@ -391,13 +403,8 @@ export default function App() {
     }
   }, []);
   if (!isDone) {
-    if (isLoading) {
-      return (
-        <View style={styles.topContainer}>
-          <ActivityIndicator animating={true} color="teal" />
-        </View>
-      );
-    } else {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
       return (
         <>
           <PaperProvider theme={theme}>
@@ -505,13 +512,13 @@ const theme = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#e6fef9",
+    backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
   },
   topContainer: {
     flex: 1,
-    backgroundColor: "#e6fef9",
+    backgroundColor: "white",
     alignItems: "center",
     padding: 10,
   },

@@ -244,7 +244,7 @@ export default function ClubScreen({ navigation }) {
                           >
                             {d.date}
                           </Text>
-                          <Text>{d.description}</Text>
+                          <Text>Location: {d.description}</Text>
                           <Text>{d.homeAway}</Text>
                         </View>
                         <View>

@@ -89,7 +89,8 @@ export default function CalendarScreen({ navigation }) {
   const [datete, setDatete] = useState(
     new Date(
       new Date(currSelectedDate).setHours(
-        new Date(currSelectedDate).getHours() + 7
+        new Date(currSelectedDate).getHours() +
+          new Date().getTimezoneOffset() / 60
       )
     )
   );
@@ -134,7 +135,8 @@ export default function CalendarScreen({ navigation }) {
       if (firstTime) {
         let tempSch;
         setCurrSelectedDate(await SecureStore.getItemAsync("selectedDate"));
-        setCurrYear(new Date().getFullYear());
+        setCurrYear(2022);
+        // must change above depending on year
         setFirst(false);
         await axios
           .get("https://ihsbackend.vercel.app/api/accounts/account", {
@@ -380,7 +382,8 @@ export default function CalendarScreen({ navigation }) {
                   Add event on{" "}
                   {new Date(
                     new Date(currSelectedDate).setHours(
-                      new Date(currSelectedDate).getHours() + 7
+                      new Date(currSelectedDate).getHours() +
+                        new Date().getTimezoneOffset() / 60
                     )
                   ).toLocaleDateString("en-us", {
                     year: "numeric",
@@ -394,6 +397,7 @@ export default function CalendarScreen({ navigation }) {
                     autoCapitalize="none"
                     autoComplete="none"
                     autoCorrect="none"
+                    returnKeyType="done"
                     placeholder="Name your event."
                     onChangeText={(e) => {
                       setEventDraft((eventDraft) => ({
@@ -409,7 +413,7 @@ export default function CalendarScreen({ navigation }) {
                     autoComplete="none"
                     autoCorrect="none"
                     placeholder="To give yourself more detail (optional)."
-                    multiline
+                    returnKeyType="done"
                     style={{ margin: 10 }}
                     onChangeText={(e) => {
                       setEventDraft((eventDraft) => ({
@@ -547,7 +551,8 @@ export default function CalendarScreen({ navigation }) {
                 setDatete(
                   new Date(
                     new Date(day.dateString).setHours(
-                      new Date(day.dateString).getHours() + 7
+                      new Date(day.dateString).getHours() +
+                        new Date().getTimezoneOffset() / 60
                     )
                   )
                 );
@@ -568,7 +573,8 @@ export default function CalendarScreen({ navigation }) {
             >
               {new Date(
                 new Date(currSelectedDate).setHours(
-                  new Date(currSelectedDate).getHours() + 7
+                  new Date(currSelectedDate).getHours() +
+                    new Date().getTimezoneOffset() / 60
                 )
               ).toLocaleDateString("en-us", {
                 year: "numeric",
@@ -589,7 +595,9 @@ export default function CalendarScreen({ navigation }) {
               {schedule.map((d) => {
                 const time1 = new Date(d.datetime),
                   time2 = new Date(currSelectedDate);
-                time2.setHours(time2.getHours() + 7);
+                time2.setHours(
+                  time2.getHours() + new Date().getTimezoneOffset() / 60
+                );
                 if (
                   time1.getDate() === time2.getDate() &&
                   Math.abs(Date.parse(time1) - Date.parse(time2)) <

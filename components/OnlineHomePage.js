@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   AppState,
+  Linking,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
@@ -49,6 +50,7 @@ function HomeScreen({ navigation }) {
   const [refreshVisible, setRefreshVisible] = useState(false);
   const [loadingVisible, setLoadingVisible] = useState(false);
   const [areGradesShowed, switchGradesShowed] = useState(false);
+  const [isWeatherShowed, switchWeatherShowed] = useState(false);
   const [tempName, setTempName] = useState("");
   const [userObj, setUserObj] = useState("");
   const [fullName, setFullName] = useState("");
@@ -229,6 +231,9 @@ function HomeScreen({ navigation }) {
           if ((await SecureStore.getItemAsync("gradesShowed")) == "true")
             switchGradesShowed(true);
           else switchGradesShowed(false);
+          if ((await SecureStore.getItemAsync("weatherShowed")) == "true")
+            switchWeatherShowed(true);
+          else switchWeatherShowed(false);
           setFirstLoad(false);
         }
         await axios
@@ -266,40 +271,18 @@ function HomeScreen({ navigation }) {
         ),
         headerRight: () => (
           <IconButton
-            icon="refresh"
+            icon="clipboard-text-clock-outline"
             iconColor="teal"
             size={30}
-            onPress={() => {
-              if (refreshVisible) {
-                setRefreshVisible(false);
-              } else {
-                Alert.alert(
-                  "Re-sync with Aeries and refresh your grades?",
-                  "You'll be asked to sign-in with Google again.",
-                  [
-                    {
-                      text: "No",
-                      style: "cancel",
-                    },
-                    {
-                      text: "Yes",
-                      onPress: async () => {
-                        Haptics.notificationAsync(
-                          Haptics.NotificationFeedbackType.Warning
-                        );
-                        setRefreshVisible(true);
-                      },
-                    },
-                  ]
-                );
-              }
+            onPress={async () => {
+              await Linking.openURL("https://teachmore.org/irvine/students/");
             }}
           />
         ),
       });
     };
     hi();
-  }, [areGradesShowed, tempName, refreshVisible]);
+  }, [areGradesShowed, isWeatherShowed, tempName, refreshVisible]);
   useEffect(() => {
     const hi = async () =>
       setBGColor(await SecureStore.getItemAsync("bgColor"));
@@ -522,6 +505,42 @@ function HomeScreen({ navigation }) {
                         return <ColorCard key={index} color={color} />;
                       })}
                     </View>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "begin",
+                        marginTop: 10,
+                        marginBottom: 50,
+                      }}
+                    >
+                      <Switch
+                        value={isWeatherShowed}
+                        onValueChange={async () => {
+                          if (isWeatherShowed) {
+                            await SecureStore.setItemAsync(
+                              "weatherShowed",
+                              "false"
+                            );
+                          } else {
+                            await SecureStore.setItemAsync(
+                              "weatherShowed",
+                              "true"
+                            );
+                          }
+                          switchWeatherShowed(!isWeatherShowed);
+                        }}
+                      />
+                      <Text
+                        style={{
+                          alignSelf: "center",
+                          marginLeft: 10,
+                          color: "teal",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Display weather
+                      </Text>
+                    </View>
                   </ScrollView>
                 </KeyboardAvoidingView>
               </Dialog.Content>
@@ -584,101 +603,105 @@ function HomeScreen({ navigation }) {
                     //{" "}
                     {
                       SCHEDULEINTERP[
-                        calendar[new Date().getMonth() - 8][
+                        calendar[new Date().getMonth() + 4][
                           new Date().getDate() - 1
                         ]
                       ]
                     }
                   </Text>
                 </Text>
-                <LinearGradient
-                  style={{
-                    marginBottom: 20,
-                    marginLeft: 20,
-                    marginRight: 20,
-                    marginTop: 0,
-                    borderRadius: 10,
-                    height: 130,
-                  }}
-                  start={{ x: 0, y: 1 }}
-                  end={{ x: 1, y: 1 }}
-                  colors={["skyblue", "#FFB6C1"]}
-                >
-                  <View
+                {isWeatherShowed ? (
+                  <LinearGradient
                     style={{
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      flexDirection: "row",
+                      marginBottom: 20,
+                      marginLeft: 20,
+                      marginRight: 20,
+                      marginTop: 0,
+                      borderRadius: 10,
                       height: 130,
                     }}
+                    start={{ x: 0, y: 1 }}
+                    end={{ x: 1, y: 1 }}
+                    colors={["skyblue", "#FFB6C1"]}
                   >
                     <View
                       style={{
-                        alignItems: "left",
-                        width: "50%",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexDirection: "row",
+                        height: 130,
                       }}
                     >
-                      <Image
-                        style={{ width: 120, height: 120, marginLeft: 10 }}
-                        source={{
-                          uri: "https://cdn-icons-png.flaticon.com/512/4052/4052984.png",
+                      <View
+                        style={{
+                          alignItems: "left",
+                          width: "50%",
                         }}
-                      />
+                      >
+                        <Image
+                          style={{ width: 120, height: 120, marginLeft: 10 }}
+                          source={{
+                            uri: "https://cdn-icons-png.flaticon.com/512/4052/4052984.png",
+                          }}
+                        />
+                      </View>
+                      <View style={{ padding: 10, width: "50%" }}>
+                        <Text
+                          style={{
+                            textAlign: "right",
+                            color: "white",
+                            fontFamily: "PlexMed",
+                          }}
+                        >
+                          {wetData.weather[0].main}
+                        </Text>
+                        <Text
+                          style={{
+                            textAlign: "right",
+                            color: "white",
+                            fontSize: 36,
+                            fontWeight: "600",
+                            fontFamily: "PlexSans",
+                          }}
+                        >
+                          {Math.round((wetData.main.temp - 273.15) * 1.8 + 32)}°
+                        </Text>
+                        <Text
+                          style={{
+                            textAlign: "right",
+                            color: "white",
+                            fontFamily: "PlexReg",
+                          }}
+                        >
+                          Feels like{" "}
+                          {Math.round(
+                            (wetData.main.feels_like - 273.15) * 1.8 + 32
+                          )}
+                          {""}°
+                        </Text>
+                        <Text
+                          style={{
+                            textAlign: "right",
+                            color: "white",
+                            fontFamily: "PlexReg",
+                          }}
+                        >
+                          Lo:{" "}
+                          {Math.round(
+                            (wetData.main.temp_min - 273.15) * 1.8 + 32
+                          )}
+                          {"° "}// Hi:{" "}
+                          {Math.round(
+                            (wetData.main.temp_max - 273.15) * 1.8 + 32
+                          )}
+                          {""}°
+                        </Text>
+                      </View>
                     </View>
-                    <View style={{ padding: 10, width: "50%" }}>
-                      <Text
-                        style={{
-                          textAlign: "right",
-                          color: "white",
-                          fontFamily: "PlexMed",
-                        }}
-                      >
-                        {wetData.weather[0].main}
-                      </Text>
-                      <Text
-                        style={{
-                          textAlign: "right",
-                          color: "white",
-                          fontSize: 36,
-                          fontWeight: "600",
-                          fontFamily: "PlexSans",
-                        }}
-                      >
-                        {Math.round((wetData.main.temp - 273.15) * 1.8 + 32)}°
-                      </Text>
-                      <Text
-                        style={{
-                          textAlign: "right",
-                          color: "white",
-                          fontFamily: "PlexReg",
-                        }}
-                      >
-                        Feels like{" "}
-                        {Math.round(
-                          (wetData.main.feels_like - 273.15) * 1.8 + 32
-                        )}
-                        {""}°
-                      </Text>
-                      <Text
-                        style={{
-                          textAlign: "right",
-                          color: "white",
-                          fontFamily: "PlexReg",
-                        }}
-                      >
-                        Lo:{" "}
-                        {Math.round(
-                          (wetData.main.temp_min - 273.15) * 1.8 + 32
-                        )}
-                        {"° "}// Hi:{" "}
-                        {Math.round(
-                          (wetData.main.temp_max - 273.15) * 1.8 + 32
-                        )}
-                        {""}°
-                      </Text>
-                    </View>
-                  </View>
-                </LinearGradient>
+                  </LinearGradient>
+                ) : (
+                  <></>
+                )}
                 <VibrantLinearGradient2 variant="displaySmall">
                   Coming up:
                 </VibrantLinearGradient2>
@@ -687,7 +710,7 @@ function HomeScreen({ navigation }) {
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
                 switch (
-                  calendar[new Date().getMonth() - 8][new Date().getDate() - 1]
+                  calendar[new Date().getMonth() + 4][new Date().getDate() - 1]
                 ) {
                   case 0: {
                     if (index == 0) {
@@ -3354,27 +3377,64 @@ function HomeScreen({ navigation }) {
                 >
                   Turn grades on/off
                   {areGradesShowed ? (
-                    <Text
-                      style={{
-                        marginBottom: 10,
-                        fontWeight: "bold",
-                        color: "teal",
-                      }}
-                    >
-                      {"\n"}Grades updated{" "}
-                      {new Date(account.lastUpdatedGrades).toLocaleDateString(
-                        "en-us",
-                        {
-                          day: "numeric",
-                          month: "2-digit",
-                        }
-                      )}
-                      .
-                    </Text>
+                    <>
+                      <Text
+                        style={{
+                          marginBottom: 10,
+                          fontWeight: "bold",
+                          color: "teal",
+                        }}
+                      >
+                        {"\n"}Grades updated{" "}
+                        {new Date(account.lastUpdatedGrades).toLocaleDateString(
+                          "en-us",
+                          {
+                            day: "numeric",
+                            month: "2-digit",
+                          }
+                        )}
+                        .
+                      </Text>
+                    </>
                   ) : (
                     <></>
                   )}
                 </Text>
+                {areGradesShowed ? (
+                  <Button
+                    mode="contained"
+                    style={{ marginLeft: 10 }}
+                    onPress={() => {
+                      if (refreshVisible) {
+                        setRefreshVisible(false);
+                      } else {
+                        Alert.alert(
+                          "Re-sync with Aeries and refresh your grades?",
+                          "You'll be asked to sign-in with Google again.",
+                          [
+                            {
+                              text: "No",
+                              style: "cancel",
+                            },
+                            {
+                              text: "Yes",
+                              onPress: async () => {
+                                Haptics.notificationAsync(
+                                  Haptics.NotificationFeedbackType.Warning
+                                );
+                                setRefreshVisible(true);
+                              },
+                            },
+                          ]
+                        );
+                      }
+                    }}
+                  >
+                    Update grades
+                  </Button>
+                ) : (
+                  <></>
+                )}
               </View>
             </ScrollView>
           </SafeAreaView>
@@ -3416,7 +3476,7 @@ export default function OnlineHomePage({ navigation }) {
       <Tab.Navigator
         screenOptions={{
           tabBarStyle: {
-            backgroundColor: "rgba(255, 255, 255, 0.6)",
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
             paddingTop: 7,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
@@ -3429,6 +3489,22 @@ export default function OnlineHomePage({ navigation }) {
         initialRouteName="Home"
       >
         <Tab.Screen
+          name="Vaquero Merchandise"
+          options={{
+            tabBarShowLabel: false,
+            headerShadowVisible: false,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="tshirt-crew"
+                color={color}
+                size={size}
+              />
+            ),
+            lazy: false,
+          }}
+          component={LocationScreen}
+        />
+        <Tab.Screen
           name="Sporting Events"
           options={{
             tabBarShowLabel: false,
@@ -3439,21 +3515,6 @@ export default function OnlineHomePage({ navigation }) {
             lazy: false,
           }}
           component={ClubScreen}
-        />
-        <Tab.Screen
-          name="Calendar"
-          options={{
-            tabBarShowLabel: false,
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="calendar-account"
-                color={color}
-                size={size}
-              />
-            ),
-            lazy: false,
-          }}
-          component={CalendarScreen}
         />
         <Tab.Screen
           options={{
@@ -3477,18 +3538,19 @@ export default function OnlineHomePage({ navigation }) {
           component={HomeScreen}
         />
         <Tab.Screen
-          name="Flextime"
+          name="Calendar"
           options={{
             tabBarShowLabel: false,
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons
-                name="clipboard-text-clock-outline"
+                name="calendar-account"
                 color={color}
                 size={size}
               />
             ),
+            lazy: false,
           }}
-          component={LocationScreen}
+          component={CalendarScreen}
         />
         <Tab.Screen
           name="My Bookmarks"

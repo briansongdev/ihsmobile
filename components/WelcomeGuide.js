@@ -47,29 +47,29 @@ export const ITEM_WIDTH = Math.round(SLIDER_WIDTH * 0.7);
 export default function WelcomeGuide({ navigation }) {
   const data = [
     {
-      title: "Clubs.",
-      body: "Advertise your club on the app, and discover others as well.",
-      imgUrl: "https://i.imgur.com/8Nsuqv5.png",
+      title: "Shop.",
+      body: "Get the latest Vaquero wear effortlessly and conveniently.",
+      imgUrl: "https://i.imgur.com/XzH5s6x.png",
     },
     {
-      title: "Calendar.",
-      body: "Plan events and receive notifications when it's time. Easy and effortless.",
-      imgUrl: "https://i.imgur.com/gRCIrwK.png",
+      title: "Vaquero Events.",
+      body: "Get caught up on the great work our athletes are involved in!",
+      imgUrl: "https://i.imgur.com/1YQRF5E.png",
     },
     {
       title: "Schedule.",
       body: "Your classes for the day, dynamically updating as you finish periods. Never miss a class (literally!)",
-      imgUrl: "https://i.imgur.com/8j5Fzn3.png",
+      imgUrl: "https://i.imgur.com/Xc0c5xc.png",
     },
     {
-      title: "Flextime.",
-      body: "Sign up for Flex conveniently and quickly, with your credentials already stored.",
-      imgUrl: "https://i.imgur.com/eWxULkl.png",
+      title: "Calendar.",
+      body: "Plan events and receive notifications when it's time. Easy and effortless.",
+      imgUrl: "https://i.imgur.com/gmG5k2e.png",
     },
     {
       title: "Bookmarks.",
       body: "Stash your passions and your necessities as bookmarks you can always travel to instantly.",
-      imgUrl: "https://i.imgur.com/8kmLebO.png",
+      imgUrl: "https://i.imgur.com/2ro4dQe.png",
     },
   ];
 
@@ -135,7 +135,7 @@ export default function WelcomeGuide({ navigation }) {
         </View>
       </ScrollView>
       <Text variant="labelLarge" style={{ margin: 10 }}>
-        Let's get started, shall we?
+        Let's get started!
       </Text>
       <AppButton
         onPress={async () => {

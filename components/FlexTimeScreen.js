@@ -6,9 +6,10 @@ export default function LocationScreen() {
   return (
     <>
       <WebView
+        style={{ marginBottom: 60 }}
         userAgent="Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
         source={{
-          uri: "https://teachmore.org/irvine/students/studentPortal.php",
+          uri: "http://spyvstyle.com/irvinehigh/shop/home",
         }}
       />
     </>

@@ -220,6 +220,10 @@ function Account({ route, navigation }) {
                               "gradesShowed",
                               "false"
                             );
+                            await SecureStore.setItemAsync(
+                              "weatherShowed",
+                              "true"
+                            );
                           }
                           await SecureStore.setItemAsync("newUser", "true");
                         });

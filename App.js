@@ -331,13 +331,13 @@ function Landing({ navigation }) {
             >
               Welcome to
             </Text>
-            <TextLinearGradient> IHS Students!</TextLinearGradient>
+            <TextLinearGradient> IHS Students.</TextLinearGradient>
           </View>
           <Text
             variant="titleMedium"
             style={{ textAlign: "center", marginBottom: 50 }}
           >
-            Let's get started, Vaqueros.
+            Let's get started, Vaqueros!
           </Text>
         </ScrollView>
         <AppButton

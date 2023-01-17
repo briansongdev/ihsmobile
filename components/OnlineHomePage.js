@@ -1690,10 +1690,8 @@ function HomeScreen({ navigation }) {
                       "",
                       "2:15 PM - 3:40 PM",
                     ];
-                    const hr = 4,
-                      min = 0;
-                    // const hr = new Date().getHours(),
-                    //   min = new Date().getMinutes();
+                    const hr = new Date().getHours(),
+                      min = new Date().getMinutes();
                     const chokepoints = [
                       [10, 25],
                       [9, 55],

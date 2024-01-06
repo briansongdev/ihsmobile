@@ -135,7 +135,7 @@ export default function CalendarScreen({ navigation }) {
       if (firstTime) {
         let tempSch;
         setCurrSelectedDate(await SecureStore.getItemAsync("selectedDate"));
-        setCurrYear(2022);
+        setCurrYear(2023);
         // must change above depending on year
         setFirst(false);
         await axios

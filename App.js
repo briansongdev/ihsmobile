@@ -45,6 +45,7 @@ import {
   VibrantLinearGradient,
 } from "./components/GradientText.js";
 import { AppButton } from "./components/WelcomeGuide";
+import { registerRootComponent } from "expo";
 
 function Account({ route, navigation }) {
   const { isLocal } = route.params;
@@ -307,7 +308,10 @@ function Landing({ navigation }) {
   return (
     <>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          scrollEnabled={false}
+        >
           <Image
             style={styles.tinyLogo}
             source={{

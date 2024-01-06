@@ -8,27 +8,23 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "center",
-      "backgroundColor": "white"
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "Use of Face ID authentication is to allow user to conveniently and privately access sensitive information."
-      },
-      "bundleIdentifier": "com.briansapps.ihsmobile"
+      "bundleIdentifier": "com.briansapps.ihsmobile",
+      "bitcode": "false"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "white"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.briansapps.ihsmobile"
     },

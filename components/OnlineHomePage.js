@@ -241,7 +241,7 @@ function HomeScreen({ navigation }) {
             bearer: bearr,
           })
           .then((res) => {
-            setTimeout(() => setCalendar(res.data.calendar), 1500);
+            setCalendar(res.data.calendar);
           })
           .catch((err) => {
             if (err.response) {
@@ -603,7 +603,7 @@ function HomeScreen({ navigation }) {
                     //{" "}
                     {
                       SCHEDULEINTERP[
-                        calendar[new Date().getMonth() + 4][
+                        calendar[new Date().getMonth() - 9][
                           new Date().getDate() - 1
                         ]
                       ]
@@ -710,7 +710,7 @@ function HomeScreen({ navigation }) {
             <ScrollView style={styles.container}>
               {account.classes.map((d, index) => {
                 switch (
-                  calendar[new Date().getMonth() + 4][new Date().getDate() - 1]
+                  calendar[new Date().getMonth() - 8][new Date().getDate() - 1]
                 ) {
                   case 0: {
                     if (index == 0) {

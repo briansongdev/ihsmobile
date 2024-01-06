@@ -16,6 +16,9 @@
     "preview3": {
       "developmentClient": true
     },
+    "development": {
+      "ios": { "image": "latest" }
+    },
     "production": {}
   },
   "submit": {
